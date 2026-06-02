@@ -1,0 +1,96 @@
+import { Link } from 'react-router-dom';
+import { Mail, Phone, ExternalLink } from 'lucide-react';
+
+export default function Footer() {
+  return (
+    <footer className="bg-slate-900 text-slate-300">
+      <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Brand */}
+          <div className="space-y-6">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="font-extrabold italic text-blue-500 text-[28px] tracking-tighter pr-1">HY</span>
+              <div className="flex flex-col justify-center border-l-2 border-slate-700 pl-3 leading-none">
+                <span className="font-black text-[22px] text-white tracking-wide mb-1">HONGYUAN</span>
+                <span className="font-bold text-[10px] text-slate-400 tracking-[0.25em]">PRECISION</span>
+              </div>
+            </Link>
+            <p className="text-sm leading-relaxed text-slate-400">
+              Precision Machining with Japanese Quality Discipline. We help engineers reduce sourcing complexity and control machining quality from prototype to batch production.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Quick Links</h3>
+            <ul className="space-y-4">
+              <li><Link to="/about" className="text-sm hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/capabilities" className="text-sm hover:text-white transition-colors">Capabilities</Link></li>
+              <li><Link to="/quality" className="text-sm hover:text-white transition-colors">Quality Control</Link></li>
+              <li><Link to="/blog" className="text-sm hover:text-white transition-colors">Technical Blog</Link></li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h3 className="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Capabilities</h3>
+            <ul className="space-y-4">
+              <li className="text-sm text-slate-400">CNC Milling</li>
+              <li className="text-sm text-slate-400">CNC Turning</li>
+              <li className="text-sm text-slate-400">Precision Grinding</li>
+              <li className="text-sm text-slate-400">EDM & Wire Cut</li>
+              <li className="text-sm text-slate-400">Surface Finishing</li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Contact Us</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-slate-500 shrink-0" />
+                <a href="mailto:sales@yourdomain.com" className="text-sm hover:text-white transition-colors">sales@yourdomain.com</a>
+              </li>
+              <li className="flex items-start gap-3">
+                <Phone className="h-5 w-5 text-slate-500 shrink-0" />
+                <span className="text-sm">+86-XXXXXXXXXXX (WhatsApp)</span>
+              </li>
+              <li className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-800">
+                <a href="https://www.linkedin.com/company/yourcompany" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
+                  LinkedIn <ExternalLink className="h-3 w-3" />
+                </a>
+                <a href="https://www.facebook.com/yourcompany" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
+                  Facebook <ExternalLink className="h-3 w-3" />
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-slate-500 tracking-widest uppercase">
+            &copy; {new Date().getFullYear()} HONGYUAN PRECISION. All Rights Reserved.
+          </p>
+          <div className="flex gap-4 items-center text-xs text-slate-300 uppercase tracking-widest">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span>Production Online</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Industries Banner */}
+      <div className="bg-slate-100 border-t border-slate-200 py-4">
+        <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-8 text-center md:text-left">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Industries Served:</div>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-[11px] font-semibold text-slate-600">
+            <span>AUTOMOTIVE</span>
+            <span>SEMICONDUCTOR</span>
+            <span>AUTOMATION</span>
+            <span>FOOD MACHINERY</span>
+            <span>INDUSTRIAL EQUIPMENT</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

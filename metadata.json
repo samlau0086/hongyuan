@@ -1,0 +1,6 @@
+{
+  "name": "Precision Machining Solutions",
+  "description": "Precision Machining with Japanese Quality Discipline. CNC machining, grinding, turning, and one-stop manufacturing support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
