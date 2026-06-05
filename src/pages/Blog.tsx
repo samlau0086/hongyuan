@@ -1,52 +1,113 @@
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const articles = [
   {
-    category: 'Tolerance Control',
-    title: 'How to Control Position Tolerance in Precision Machining',
-    excerpt: 'Position tolerance is one of the most important requirements in precision machined parts. It directly affects assembly accuracy, functional alignment and equipment stability.',
-    content: [
-      'To control position tolerance, manufacturers must review datum structure, machining sequence, clamping method and inspection strategy before production.',
-      'A good machining process should reduce repeated clamping. It should also keep important features in the same setup whenever possible.',
-      'Inspection is also critical. CMM measurement helps verify hole position, profile accuracy and relationship between key features.',
-      'For high-precision parts, position tolerance should not be treated as a final inspection issue. It must be controlled during process planning.'
-    ]
+    title: 'How to Control Position Tolerance in CNC Machining',
+    date: 'May 20, 2024',
+    img: 'https://images.unsplash.com/photo-1590496794008-383c8070b257?q=80&w=2070&auto=format&fit=crop'
   },
   {
-    category: 'Grinding',
-    title: 'Maintaining ±0.01 mm Grinding Stability',
-    excerpt: 'Grinding is often used when CNC machining alone cannot achieve the required dimensional accuracy or surface finish.',
-    content: [
-      'Maintaining ±0.01 mm stability requires proper material preparation, heat treatment control, grinding wheel selection, machine condition and inspection discipline.',
-      'Thermal deformation must also be considered. Small temperature changes may affect final measurement results.',
-      'For batch production, operators should monitor grinding allowance, wheel wear and inspection frequency.',
-      'Stable grinding quality depends on both technical skill and process discipline.'
-    ]
+    title: 'Japanese Drawing vs ISO Drawing',
+    date: 'May 10, 2024',
+    img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop'
   },
   {
-    category: 'Drawing Interpretation',
-    title: 'Japanese Drawings vs ISO Drawings: Key Differences Engineers Should Know',
-    excerpt: 'Japanese industrial drawings often emphasize practical manufacturing discipline, clear inspection points and strict attention to detail.',
-    content: [
-      'ISO drawings provide standardized symbols, tolerances and geometric requirements.',
-      'For suppliers serving Japanese customers, understanding drawing intent is very important. Sometimes the real requirement is not only the tolerance value, but also the assembly purpose behind the tolerance.',
-      'A qualified supplier should review drawings carefully, confirm unclear requirements and provide manufacturability suggestions before production.'
-    ]
+    title: 'Maintaining ±0.01 mm Grinding Tolerance',
+    date: 'Apr 25, 2024',
+    img: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop'
   },
   {
-    category: 'Delivery & Quality',
-    title: 'Why Stable Delivery Matters in Precision Manufacturing',
-    excerpt: 'In equipment manufacturing, one delayed part can delay a complete machine.',
-    content: [
-      'Stable delivery is not only about shipping on time. It requires material planning, process scheduling, outsourcing coordination, inspection control and risk reporting.',
-      'A reliable machining supplier should monitor production milestones and communicate early when risk appears.',
-      'This allows customers to adjust assembly plans and reduce project uncertainty.'
-    ]
+    title: 'Common Causes of Surface Finish Defects',
+    date: 'Apr 15, 2024',
+    img: 'https://images.unsplash.com/photo-1509213606622-c3c721ddb9c0?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'How We Inspect Tight-Tolerance Parts',
+    date: 'Apr 05, 2024',
+    img: 'https://images.unsplash.com/photo-1620021600854-3e9a7e8e7784?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'CNC Machining for Semiconductor Equipment',
+    date: 'Mar 28, 2024',
+    img: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Best Practices for 5-Axis Milling',
+    date: 'Mar 15, 2024',
+    img: 'https://images.unsplash.com/photo-1565869363026-68196e8e818b?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Material Selection for Aerospace Components',
+    date: 'Mar 02, 2024',
+    img: 'https://images.unsplash.com/photo-1590496794008-383c8070b257?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Optimizing Cycle Times in Lathe Machining',
+    date: 'Feb 20, 2024',
+    img: 'https://images.unsplash.com/photo-1620021600854-3e9a7e8e7784?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'The Importance of Tool Life Management',
+    date: 'Feb 05, 2024',
+    img: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Wire EDM vs Die Sinker EDM: A Comparison',
+    date: 'Jan 22, 2024',
+    img: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Designing Parts for Manufacturability (DFM)',
+    date: 'Jan 10, 2024',
+    img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Geometric Dimensioning and Tolerancing',
+    date: 'Dec 15, 2023',
+    img: 'https://images.unsplash.com/photo-1565810052953-e57ebddc1efb?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Advances in Precision Measurement',
+    date: 'Nov 28, 2023',
+    img: 'https://images.unsplash.com/photo-1509213606622-c3c721ddb9c0?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Quality Control in Automotive Parts',
+    date: 'Nov 12, 2023',
+    img: 'https://images.unsplash.com/photo-1620021600854-3e9a7e8e7784?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Surface Heat Treatment and Hardness Testing',
+    date: 'Oct 25, 2023',
+    img: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'The Role of Coolant in High-Speed Machining',
+    date: 'Oct 10, 2023',
+    img: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    title: 'Reducing Chatter in Aluminum Parts',
+    date: 'Sep 22, 2023',
+    img: 'https://images.unsplash.com/photo-1590496794008-383c8070b257?q=80&w=2070&auto=format&fit=crop'
   }
 ];
 
 export default function Blog() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 18;
+  
+  // Duplicate articles for demonstration purposes
+  const allArticles = [...articles, ...articles, ...articles];
+  const totalPages = Math.ceil(allArticles.length / itemsPerPage);
+  
+  const currentArticles = allArticles.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="bg-white">
       <SEO 
@@ -63,33 +124,55 @@ export default function Blog() {
       </section>
 
       {/* Blog List */}
-      <section className="py-24">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-           <div className="space-y-16">
-             {articles.map((article, idx) => (
-               <article key={idx} className="group cursor-default">
-                 <div className="border-l-2 border-transparent group-hover:border-accent pl-6 transition-colors">
-                   <div className="flex items-center gap-2 text-sm font-sans font-medium text-accent uppercase tracking-widest mb-3">
-                     <BookOpen className="h-4 w-4" />
-                     {article.category}
-                   </div>
-                   <h2 className="text-2xl font-display font-bold text-primary-900 mb-4">{article.title}</h2>
-                   <p className="text-gray-600 font-medium mb-6 leading-relaxed">
-                     {article.excerpt}
-                   </p>
-                   <div className="space-y-4 text-gray-500 text-sm leading-relaxed mb-6">
-                     {article.content.map((paragraph, pIdx) => (
-                       <p key={pIdx}>{paragraph}</p>
-                     ))}
-                   </div>
-                   {/* Decorative button */}
-                   <button className="inline-flex items-center text-sm font-semibold text-primary-900 group-hover:text-accent transition-colors mt-2">
-                     Read Full Article
-                     <ArrowRight className="ml-1.5 h-4 w-4" />
-                   </button>
+      <section className="py-24 bg-slate-50">
+        <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
+           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">
+             {currentArticles.map((article, idx) => (
+               <article key={idx} className="group cursor-pointer">
+                 <div className="rounded-lg overflow-hidden mb-4 border border-gray-200 bg-white">
+                   <img src={article.img} alt={article.title} className="w-full h-32 md:h-40 object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                 </div>
+                 <h3 className="text-[15px] font-bold text-slate-900 leading-snug mb-2 group-hover:text-blue-700 transition-colors">
+                   {article.title}
+                 </h3>
+                 <div className="text-xs text-slate-500">
+                   {article.date}
                  </div>
                </article>
              ))}
+           </div>
+
+           {/* Pagination */}
+           <div className="mt-16 flex justify-center items-center gap-2">
+             <button 
+               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+               disabled={currentPage === 1}
+               className="p-2 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+             >
+               <ChevronLeft className="w-5 h-5" />
+             </button>
+             
+             {Array.from({ length: totalPages }).map((_, i) => (
+               <button
+                 key={i}
+                 onClick={() => setCurrentPage(i + 1)}
+                 className={`w-10 h-10 rounded border text-sm font-medium transition-colors ${
+                   currentPage === i + 1 
+                     ? 'bg-blue-700 text-white border-blue-700' 
+                     : 'border-gray-200 text-gray-700 hover:bg-gray-100'
+                 }`}
+               >
+                 {i + 1}
+               </button>
+             ))}
+             
+             <button 
+               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+               disabled={currentPage === totalPages}
+               className="p-2 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+             >
+               <ChevronRight className="w-5 h-5" />
+             </button>
            </div>
         </div>
       </section>
