@@ -139,9 +139,12 @@ jobs:
           fi
 
           cd "$DEPLOY_PATH/current"
-          PORT="$APP_PORT" NODE_ENV=production pm2 startOrReload ecosystem.config.cjs --env production --update-env 2>/dev/null || \
-            PORT="$APP_PORT" NODE_ENV=production pm2 start dist/server.cjs --name "$APP_NAME" --update-env
+          pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
+          PORT="$APP_PORT" NODE_ENV=production pm2 start ecosystem.config.cjs --env production --update-env
+          pm2 flush "$APP_NAME" >/dev/null 2>&1 || true
           pm2 save
+
+          pm2 describe "$APP_NAME"
 
           find "$DEPLOY_PATH/releases" -mindepth 1 -maxdepth 1 -type d | sort | head -n -5 | xargs -r rm -rf
           EOF

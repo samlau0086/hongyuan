@@ -57,6 +57,7 @@ async function startServer() {
   } else {
     // Production: serve static files from the built server directory.
     const distPath = __dirname;
+    console.log(`Serving static files from ${distPath}`);
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
