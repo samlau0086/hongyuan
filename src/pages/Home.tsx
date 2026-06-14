@@ -23,6 +23,15 @@ import {
 } from 'lucide-react';
 import SEO from '../components/SEO';
 
+const capabilityImages: Record<string, string> = {
+  'CNC Milling': '/capabilities/cnc-miling.jpg',
+  'CNC Turning': '/capabilities/cnc-turning.jpg',
+  'Surface Grinding': '/capabilities/Grinding.jpg',
+  'EDM & Wire EDM': '/capabilities/edm.jpg',
+  Materials: '/capabilities/materials.jpg',
+  'Secondary Processes': '/capabilities/secondary-process.jpg',
+};
+
 export default function Home() {
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -205,7 +214,7 @@ export default function Home() {
              ].map((cap, idx) => (
                 <div key={idx} className="border border-slate-800 flex flex-col text-center hover:bg-slate-800 transition-colors overflow-hidden group">
                    <div className="h-32 w-full bg-slate-800 overflow-hidden">
-                     <img src={cap.img} alt={cap.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" referrerPolicy="no-referrer" />
+                     <img src={capabilityImages[cap.title] || cap.img} alt={cap.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" />
                    </div>
                    <div className="p-6 flex-1 flex flex-col">
                      <h3 className="font-bold border-b border-slate-700 pb-4 mb-4 text-sm whitespace-pre-line">{cap.title}</h3>
