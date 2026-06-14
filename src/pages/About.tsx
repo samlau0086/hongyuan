@@ -5,15 +5,15 @@ export default function About() {
   const sampleParts = [
     { src: '/samples/cnc2.jpg', title: 'CNC Machined Component' },
     { src: '/samples/cnc3.jpg', title: 'Precision CNC Part' },
-    { src: '/samples/sample 1.jpg', title: 'Milled Aluminum Part' },
-    { src: '/samples/sample 2.jpg', title: 'Custom Machined Block' },
-    { src: '/samples/sample 3.jpg', title: 'Precision Fixture Part' },
-    { src: '/samples/sample 4.jpg', title: 'Complex Milled Component' },
-    { src: '/samples/sample 5.jpg', title: 'Turned Metal Part' },
-    { src: '/samples/sample 6.jpg', title: 'Small Precision Component' },
-    { src: '/samples/sample 7.jpg', title: 'Machined Mechanical Part' },
-    { src: '/samples/sample 8.jpg', title: 'Surface Finished Part' },
-    { src: '/samples/sample 9 swiss turning.jpg', title: 'Swiss Turning Part' },
+    { src: '/samples/sample%201.jpg', title: 'Milled Aluminum Part' },
+    { src: '/samples/sample%202.jpg', title: 'Custom Machined Block' },
+    { src: '/samples/sample%203.jpg', title: 'Precision Fixture Part' },
+    { src: '/samples/sample%204.jpg', title: 'Complex Milled Component' },
+    { src: '/samples/sample%205.jpg', title: 'Turned Metal Part' },
+    { src: '/samples/sample%206.jpg', title: 'Small Precision Component' },
+    { src: '/samples/sample%207.jpg', title: 'Machined Mechanical Part' },
+    { src: '/samples/sample%208.jpg', title: 'Surface Finished Part' },
+    { src: '/samples/sample%209%20swiss%20turning.jpg', title: 'Swiss Turning Part' },
   ];
 
   return (
@@ -110,6 +110,7 @@ export default function About() {
                     <img
                       src={part.src}
                       alt={part.title}
+                      loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
