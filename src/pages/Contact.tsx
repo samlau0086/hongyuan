@@ -5,15 +5,33 @@ import SEO from '../components/SEO';
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setSubmitError('');
+
+    try {
+      const response = await fetch('/api/rfq', {
+        method: 'POST',
+        body: new FormData(e.currentTarget),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit RFQ. Please try again.');
+      }
+
+      e.currentTarget.reset();
+      setSelectedFileName('');
       setIsSubmitted(true);
-    }, 1500);
+    } catch (error: any) {
+      setSubmitError(error.message || 'Failed to submit RFQ. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -114,48 +132,63 @@ export default function Contact() {
                      </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-8">
+                  <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-8">
                     {/* Basic Info */}
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Name *</label>
-                        <input required type="text" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                        <input required name="name" type="text" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Company *</label>
-                        <input required type="text" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                        <input required name="company" type="text" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Email *</label>
-                        <input required type="email" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                        <input required name="email" type="email" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Phone / WhatsApp</label>
-                        <input type="tel" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                        <input name="phone" type="tel" className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Expected Delivery Date</label>
-                      <input type="text" placeholder="e.g. 2 weeks, specific date..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                      <input name="deliveryDate" type="text" placeholder="e.g. 2 weeks, specific date..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Additional Technical Requirements</label>
-                      <textarea rows={4} className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"></textarea>
+                      <textarea name="requirements" rows={4} className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"></textarea>
                     </div>
 
-                    {/* File Upload Placeholder */}
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Upload Drawing (2D/3D)</label>
-                      <div className="border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors p-8 text-center cursor-pointer">
+                      <label className="block border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors p-8 text-center cursor-pointer">
+                        <input
+                          name="drawing"
+                          type="file"
+                          multiple
+                          className="sr-only"
+                          accept=".pdf,.step,.stp,.iges,.igs,.dwg,.dxf,.zip,.rar,.7z"
+                          onChange={(event) => {
+                            const files = Array.from(event.currentTarget.files || []);
+                            setSelectedFileName(files.length > 1 ? `${files.length} files selected` : files[0]?.name || '');
+                          }}
+                        />
                         <UploadCloud className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-primary-900 mb-1">Click to upload or drag and drop</p>
+                        <p className="text-sm font-medium text-primary-900 mb-1">{selectedFileName || 'Click to upload'}</p>
                         <p className="text-xs text-gray-500">Supported formats: PDF, STEP, IGES, DWG, DXF (Max 20MB)</p>
-                      </div>
+                      </label>
                     </div>
 
                     <div className="pt-4">
+                      {submitError && (
+                        <p className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                          {submitError}
+                        </p>
+                      )}
                       <button 
                         type="submit" 
                         disabled={isSubmitting}
