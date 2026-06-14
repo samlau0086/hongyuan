@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   UploadCloud, 
@@ -17,11 +18,44 @@ import {
   FileText,
   Search,
   Settings,
-  Shield
+  Shield,
+  Wrench
 } from 'lucide-react';
 import SEO from '../components/SEO';
 
 export default function Home() {
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLatestPosts = async () => {
+      try {
+        setPostsLoading(true);
+        const response = await fetch('/api/posts');
+        if (response.ok) {
+          const data = await response.json();
+          const formattedArticles = data.slice(0, 4).map((post: any) => {
+            const decodedTitle = new DOMParser().parseFromString(post.title.rendered, 'text/html').body.textContent || post.title.rendered;
+            return {
+              title: decodedTitle,
+              date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+              img: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://images.unsplash.com/photo-1590496794008-383c8070b257?q=80&w=2070&auto=format&fit=crop',
+              slug: post.slug,
+              link: post.link
+            };
+          });
+          setLatestPosts(formattedArticles);
+        }
+      } catch (error) {
+        console.error("Failed to fetch latest posts:", error);
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchLatestPosts();
+  }, []);
+
   return (
     <div className="bg-white">
       <SEO 
@@ -32,10 +66,10 @@ export default function Home() {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-slate-900 text-white pt-32 pb-24 lg:pt-40 lg:pb-32">
-        <div className="absolute inset-0 opacity-40">
-           <img src="https://images.unsplash.com/photo-1565810052953-e57ebddc1efb?q=80&w=2070&auto=format&fit=crop" alt="CNC Machining" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 opacity-100">
+           <img src="/hongyuan-banner.jpg" alt="CNC Machining Banner" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-slate-900/70"></div>
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-white">
@@ -96,7 +130,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-slate-900">Industries We Serve</h2>
           </div>
           
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             {[
               { 
                 icon: Cpu, title: 'Semiconductor\nEquipment', 
@@ -122,6 +156,11 @@ export default function Home() {
                 icon: Key, title: 'Key Cutting\nEquipment', 
                 img: 'https://images.unsplash.com/photo-1580983554867-d16ed417b351?q=80&w=2070&auto=format&fit=crop',
                 items: ['Key Cutting Parts', 'Precision Guides', 'Clamping Components', 'Wear-Resistant Parts'] 
+              },
+              { 
+                icon: Wrench, title: 'Jigs &\nFixtures', 
+                img: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop',
+                items: ['Assembly Jigs', 'Inspection Fixtures', 'Machining Fixtures', 'Welding Jigs'] 
               }
             ].map((industry, idx) => (
               <div key={idx} className="bg-white border border-slate-200">
@@ -287,20 +326,42 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-             {[
-               { img: 'https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?q=80&w=2070&auto=format&fit=crop', title: 'How to Control Position Tolerance in CNC Machining', date: 'May 20, 2024' },
-               { img: 'https://images.unsplash.com/photo-1541888081691-10c0e815610e?q=80&w=2070&auto=format&fit=crop', title: 'Japanese Drawing vs ISO Drawing', date: 'May 10, 2024' },
-               { img: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070&auto=format&fit=crop', title: 'Maintaining ±0.01 mm Grinding Tolerance', date: 'Apr 25, 2024' },
-               { img: 'https://images.unsplash.com/photo-1581092335397-9583eb92d232?q=80&w=2070&auto=format&fit=crop', title: 'How We Inspect Tight-Tolerance Parts', date: 'Apr 05, 2024' },
-             ].map((post, idx) => (
-               <Link to="/blog" key={idx} className="group flex flex-col">
-                 <div className="h-48 bg-slate-200 mb-5 overflow-hidden rounded-sm border border-slate-200">
-                   <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100" referrerPolicy="no-referrer" />
-                 </div>
-                 <h3 className="font-bold text-sm text-slate-900 mb-3 leading-relaxed group-hover:text-blue-700 transition-colors line-clamp-2">{post.title}</h3>
-                 <p className="text-[11px] text-slate-400 font-bold tracking-widest uppercase mt-auto">{post.date}</p>
-               </Link>
-             ))}
+            {postsLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 h-48 rounded-sm mb-5 border border-slate-200"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              ))
+            ) : latestPosts.length > 0 ? (
+              latestPosts.map((post, idx) => (
+                <Link to={post.slug ? `/blog/${post.slug}` : "/blog"} key={idx} className="group flex flex-col">
+                  <div className="h-48 bg-slate-200 mb-5 overflow-hidden rounded-sm border border-slate-200">
+                    <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100" referrerPolicy="no-referrer" />
+                  </div>
+                  <h3 className="font-bold text-sm text-slate-900 mb-3 leading-relaxed group-hover:text-blue-700 transition-colors line-clamp-2">{post.title}</h3>
+                  <p className="text-[11px] text-slate-400 font-bold tracking-widest uppercase mt-auto">{post.date}</p>
+                </Link>
+              ))
+            ) : (
+              // Fallback if no posts
+              [
+                { img: 'https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?q=80&w=2070&auto=format&fit=crop', title: 'How to Control Position Tolerance in CNC Machining', date: 'May 20, 2024' },
+                { img: 'https://images.unsplash.com/photo-1541888081691-10c0e815610e?q=80&w=2070&auto=format&fit=crop', title: 'Japanese Drawing vs ISO Drawing', date: 'May 10, 2024' },
+                { img: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070&auto=format&fit=crop', title: 'Maintaining ±0.01 mm Grinding Tolerance', date: 'Apr 25, 2024' },
+                { img: 'https://images.unsplash.com/photo-1581092335397-9583eb92d232?q=80&w=2070&auto=format&fit=crop', title: 'How We Inspect Tight-Tolerance Parts', date: 'Apr 05, 2024' },
+              ].map((post, idx) => (
+                <Link to="/blog" key={idx} className="group flex flex-col">
+                  <div className="h-48 bg-slate-200 mb-5 overflow-hidden rounded-sm border border-slate-200">
+                    <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100" referrerPolicy="no-referrer" />
+                  </div>
+                  <h3 className="font-bold text-sm text-slate-900 mb-3 leading-relaxed group-hover:text-blue-700 transition-colors line-clamp-2">{post.title}</h3>
+                  <p className="text-[11px] text-slate-400 font-bold tracking-widest uppercase mt-auto">{post.date}</p>
+                </Link>
+              ))
+            )}
           </div>
           
           <div className="text-center mt-12">

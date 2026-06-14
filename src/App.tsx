@@ -6,6 +6,7 @@ import About from './pages/About';
 import Capabilities from './pages/Capabilities';
 import Quality from './pages/Quality';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import Contact from './pages/Contact';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/capabilities" element={<Capabilities />} />
             <Route path="/quality" element={<Quality />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </Layout>

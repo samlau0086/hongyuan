@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Mail, Phone, ExternalLink } from 'lucide-react';
+import { Mail, Phone, ExternalLink, MapPin } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -49,18 +49,22 @@ export default function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-slate-500 shrink-0" />
-                <a href="mailto:sales@yourdomain.com" className="text-sm hover:text-white transition-colors">sales@yourdomain.com</a>
+                <a href="mailto:lynn.lee@hongyuan-precision.com" className="text-sm hover:text-white transition-colors">lynn.lee@hongyuan-precision.com</a>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-slate-500 shrink-0" />
-                <span className="text-sm">+86-XXXXXXXXXXX (WhatsApp)</span>
+                <span className="text-sm">0086-755-23059684 (Tel)<br/> +8618926541701 (Mob/WhatsApp)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-slate-500 shrink-0" />
+                <span className="text-sm">Shajing, Bao'an District<br/>Shenzhen City, China</span>
               </li>
               <li className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-800">
-                <a href="https://www.linkedin.com/company/yourcompany" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
+                <a href="https://linkedin.com/in/lee-lynn-b173a075" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
                   LinkedIn <ExternalLink className="h-3 w-3" />
                 </a>
-                <a href="https://www.facebook.com/yourcompany" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
-                  Facebook <ExternalLink className="h-3 w-3" />
+                <a href="https://wa.me/8618926541701" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors flex items-center gap-1 text-sm">
+                  WhatsApp <ExternalLink className="h-3 w-3" />
                 </a>
               </li>
             </ul>
@@ -69,7 +73,7 @@ export default function Footer() {
         
         <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-slate-500 tracking-widest uppercase">
-            &copy; {new Date().getFullYear()} HONGYUAN PRECISION. All Rights Reserved.
+            &copy; {new Date().getFullYear()} HONGYUAN MACHINERY LIMITED. All Rights Reserved.
           </p>
           <div className="flex gap-4 items-center text-xs text-slate-300 uppercase tracking-widest">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>

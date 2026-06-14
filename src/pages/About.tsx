@@ -1,4 +1,4 @@
-import { Factory, Cpu, Car, Layers, Box } from 'lucide-react';
+import { Factory, Cpu, Car, Layers, Box, Wrench } from 'lucide-react';
 import SEO from '../components/SEO';
 
 export default function About() {
@@ -48,6 +48,7 @@ export default function About() {
               { title: 'Automation Equipment', icon: Layers, desc: 'Components for automated assembly lines, robotic systems, motion modules and custom production equipment.' },
               { title: 'Turnkey Equipment', icon: Factory, desc: 'We support machine builders with one-stop machining, surface finishing and assembly-ready parts.' },
               { title: 'Food Machinery', icon: Box, desc: 'Stainless steel parts, shafts, brackets and custom components for food processing and packaging machinery.' },
+              { title: 'Jigs & Fixtures', icon: Wrench, desc: 'Custom assembly jigs, inspection fixtures, holding clamps, and precision functional tooling bases.' },
             ].map((ind, idx) => (
               <div key={idx} className="bg-white p-8 border border-gray-200 shadow-sm flex flex-col items-start">
                  <div className="mb-6 p-3 bg-gray-50 border border-gray-100 rounded-sm">
