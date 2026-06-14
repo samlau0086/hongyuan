@@ -2,6 +2,20 @@ import { Factory, Cpu, Car, Layers, Box, Wrench } from 'lucide-react';
 import SEO from '../components/SEO';
 
 export default function About() {
+  const sampleParts = [
+    { src: '/samples/cnc2.jpg', title: 'CNC Machined Component' },
+    { src: '/samples/cnc3.jpg', title: 'Precision CNC Part' },
+    { src: '/samples/sample 1.jpg', title: 'Milled Aluminum Part' },
+    { src: '/samples/sample 2.jpg', title: 'Custom Machined Block' },
+    { src: '/samples/sample 3.jpg', title: 'Precision Fixture Part' },
+    { src: '/samples/sample 4.jpg', title: 'Complex Milled Component' },
+    { src: '/samples/sample 5.jpg', title: 'Turned Metal Part' },
+    { src: '/samples/sample 6.jpg', title: 'Small Precision Component' },
+    { src: '/samples/sample 7.jpg', title: 'Machined Mechanical Part' },
+    { src: '/samples/sample 8.jpg', title: 'Surface Finished Part' },
+    { src: '/samples/sample 9 swiss turning.jpg', title: 'Swiss Turning Part' },
+  ];
+
   return (
     <div className="bg-white">
       <SEO 
@@ -89,21 +103,17 @@ export default function About() {
              <p className="text-gray-400">Examples of component categories we regularly produce.</p>
            </div>
            
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[
-                'CNC Milled Aluminum Parts',
-                'Stainless Steel Precision Brackets',
-                'Shaft Components',
-                'Grinding Components',
-                'EDM & Wire Cut Parts',
-                'Surface-Treated Parts',
-                'Assembly-Ready Mechanical Components'
-              ].map((part, idx) => (
-                <div key={idx} className="aspect-square bg-primary-800 border border-gray-700/50 p-6 flex flex-col justify-end group hover:bg-gray-800 transition-colors cursor-default">
-                  <div className="w-10 h-10 border border-gray-600 mb-auto opacity-50 group-hover:opacity-100 transition-opacity flex justify-center items-center">
-                    <span className="text-[10px] text-gray-500 font-mono">IMG_{idx+1}</span>
+           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {sampleParts.map((part) => (
+                <div key={part.src} className="group overflow-hidden border border-gray-700/50 bg-primary-800">
+                  <div className="aspect-square overflow-hidden bg-primary-800">
+                    <img
+                      src={part.src}
+                      alt={part.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   </div>
-                  <h3 className="text-sm font-medium text-gray-300 font-sans">{part}</h3>
+                  <h3 className="px-4 py-3 text-sm font-medium text-gray-300 font-sans">{part.title}</h3>
                 </div>
               ))}
            </div>
