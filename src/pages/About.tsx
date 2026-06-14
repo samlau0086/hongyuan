@@ -3,17 +3,13 @@ import SEO from '../components/SEO';
 
 export default function About() {
   const sampleParts = [
-    { src: '/samples/cnc2.jpg', title: 'CNC Machined Component' },
-    { src: '/samples/cnc3.jpg', title: 'Precision CNC Part' },
-    { src: '/samples/sample%201.jpg', title: 'Milled Aluminum Part' },
-    { src: '/samples/sample%202.jpg', title: 'Custom Machined Block' },
-    { src: '/samples/sample%203.jpg', title: 'Precision Fixture Part' },
-    { src: '/samples/sample%204.jpg', title: 'Complex Milled Component' },
-    { src: '/samples/sample%205.jpg', title: 'Turned Metal Part' },
-    { src: '/samples/sample%206.jpg', title: 'Small Precision Component' },
-    { src: '/samples/sample%207.jpg', title: 'Machined Mechanical Part' },
-    { src: '/samples/sample%208.jpg', title: 'Surface Finished Part' },
-    { src: '/samples/sample%209%20swiss%20turning.jpg', title: 'Swiss Turning Part' },
+    { src: '/samples/IMG_1.jpg', title: 'CNC Milled Aluminum Parts' },
+    { src: '/samples/IMG_2.jpg', title: 'Stainless Steel Precision Brackets' },
+    { src: '/samples/IMG_3.jpg', title: 'Shaft Components' },
+    { src: '/samples/IMG_4.jpg', title: 'Grinding Components' },
+    { src: '/samples/IMG_5.jpg', title: 'EDM & Wire Cut Parts' },
+    { src: '/samples/IMG_6.jpg', title: 'Surface-Treated Parts' },
+    { src: '/samples/IMG_7.jpg', title: 'Assembly-Ready Mechanical Components' },
   ];
 
   return (
