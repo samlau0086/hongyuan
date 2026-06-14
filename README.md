@@ -18,3 +18,31 @@ View your app in AI Studio: https://ai.studio/apps/79664f77-73a0-477f-be70-3ff01
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Deploy to VPS with GitHub Actions
+
+The workflow in `.github/workflows/deploy-vps.yml` builds the app, uploads the release to your VPS, installs production dependencies, and starts or reloads the app with PM2.
+
+### VPS prerequisites
+
+Install Node.js 20 and PM2 on the VPS:
+
+```bash
+npm install -g pm2
+```
+
+Make sure your reverse proxy points to the app port, default `3000`.
+
+### GitHub Secrets
+
+Add these secrets in `Settings -> Secrets and variables -> Actions`:
+
+- `VPS_HOST`: VPS IP or domain.
+- `VPS_USER`: SSH username.
+- `VPS_SSH_KEY`: private SSH key for deployment.
+- `VPS_PORT`: SSH port, optional, defaults to `22`.
+- `VPS_DEPLOY_PATH`: deploy directory, optional, defaults to `/var/www/hongyuan`.
+
+### One-click deploy
+
+Open `Actions -> Deploy to VPS -> Run workflow` in GitHub. A push to `main` also deploys automatically.

@@ -1,0 +1,93 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: production
+  APP_NAME: hongyuan
+  APP_PORT: "3000"
+  DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH || '/var/www/hongyuan' }}
+  VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Pack release
+        run: |
+          mkdir -p release
+          cp -r dist package.json package-lock.json ecosystem.config.cjs release/
+          tar -czf release.tar.gz -C release .
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$VPS_PORT" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload release
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "mkdir -p '$DEPLOY_PATH/releases'"
+          scp -i ~/.ssh/deploy_key -P "$VPS_PORT" release.tar.gz "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$DEPLOY_PATH/release.tar.gz"
+
+      - name: Activate release
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "APP_NAME='$APP_NAME' APP_PORT='$APP_PORT' DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'EOF'
+          set -euo pipefail
+
+          APP_NAME="${APP_NAME:-hongyuan}"
+          APP_PORT="${APP_PORT:-3000}"
+          DEPLOY_PATH="${DEPLOY_PATH:-/var/www/hongyuan}"
+          RELEASE_ID="$(date +%Y%m%d%H%M%S)"
+          RELEASE_DIR="$DEPLOY_PATH/releases/$RELEASE_ID"
+
+          mkdir -p "$RELEASE_DIR"
+          tar -xzf "$DEPLOY_PATH/release.tar.gz" -C "$RELEASE_DIR"
+          rm -f "$DEPLOY_PATH/release.tar.gz"
+
+          cd "$RELEASE_DIR"
+          npm ci --omit=dev
+
+          ln -sfn "$RELEASE_DIR" "$DEPLOY_PATH/current"
+
+          if command -v pm2 >/dev/null 2>&1; then
+            cd "$DEPLOY_PATH/current"
+            PORT="$APP_PORT" NODE_ENV=production pm2 startOrReload ecosystem.config.cjs --env production 2>/dev/null || \
+              PORT="$APP_PORT" NODE_ENV=production pm2 start dist/server.cjs --name "$APP_NAME" --update-env
+            pm2 save
+          else
+            echo "PM2 is not installed on the VPS. Install it with: npm install -g pm2"
+            exit 1
+          fi
+
+          find "$DEPLOY_PATH/releases" -mindepth 1 -maxdepth 1 -type d | sort | head -n -5 | xargs -r rm -rf
+          EOF
