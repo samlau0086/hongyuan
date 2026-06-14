@@ -25,13 +25,13 @@ The workflow in `.github/workflows/deploy-vps.yml` builds the app, uploads the r
 
 ### VPS prerequisites
 
-Install Node.js 20 and PM2 on the VPS:
+Use a Debian/Ubuntu VPS user that can run `sudo`, or install Node.js 20 and PM2 on the VPS ahead of time:
 
 ```bash
 npm install -g pm2
 ```
 
-Make sure your reverse proxy points to the app port, default `3000`.
+The GitHub Actions workflow can install Node.js 20 and PM2 automatically when they are missing and the SSH user has `sudo` permission. Make sure your reverse proxy points to the app port, default `3000`.
 
 ### GitHub Secrets
 
