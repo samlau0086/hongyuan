@@ -10,13 +10,14 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsSubmitting(true);
     setSubmitError('');
 
     try {
       const response = await fetch('/api/rfq', {
         method: 'POST',
-        body: new FormData(e.currentTarget),
+        body: new FormData(form),
       });
 
       const result = await response.json().catch(() => ({}));
@@ -24,7 +25,7 @@ export default function Contact() {
         throw new Error(result.error || 'Failed to submit RFQ. Please try again.');
       }
 
-      e.currentTarget.reset();
+      form.reset();
       setSelectedFileName('');
       setIsSubmitted(true);
     } catch (error: any) {
