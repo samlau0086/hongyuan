@@ -42,8 +42,9 @@ Add these secrets in `Settings -> Secrets and variables -> Actions`:
 - `VPS_SSH_KEY`: private SSH key for deployment.
 - `VPS_PORT`: SSH port, optional, defaults to `22`.
 - `VPS_DEPLOY_PATH`: deploy directory, optional, defaults to `/var/www/hongyuan`.
-- `RFQ_ADMIN_PASSWORD`: password for the RFQ admin page.
-- `RFQ_ADMIN_USER`: RFQ admin username, optional, defaults to `admin`.
+- `ADMIN_PASSWORD`: password for the web admin panel.
+- `ADMIN_USER`: admin username, optional, defaults to `admin`.
+- `ADMIN_SESSION_SECRET`: random secret for admin login sessions, optional but recommended.
 
 ### One-click deploy
 
@@ -54,9 +55,11 @@ Open `Actions -> Deploy to VPS -> Run workflow` in GitHub. A push to `main` also
 The Contact form submits RFQ data and drawing files to the app backend.
 
 - Public submit endpoint: `/api/rfq`
-- Admin page: `/admin/rfq`
+- Admin login: `/admin/login`
+- Admin dashboard: `/admin`
+- RFQ admin page: `/admin/rfq`
 - Default admin username: `admin`
-- Admin password: set `RFQ_ADMIN_PASSWORD` in GitHub Actions secrets.
+- Admin password: set `ADMIN_PASSWORD` in GitHub Actions secrets.
 - Stored data on VPS: `$VPS_DEPLOY_PATH/shared/rfq`
 
 Uploaded files are downloadable from the admin page after login.

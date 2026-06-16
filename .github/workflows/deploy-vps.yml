@@ -15,8 +15,9 @@ env:
   APP_PORT: "3000"
   DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH || '/var/www/hongyuan' }}
   VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
-  RFQ_ADMIN_USER: ${{ secrets.RFQ_ADMIN_USER || 'admin' }}
-  RFQ_ADMIN_PASSWORD: ${{ secrets.RFQ_ADMIN_PASSWORD }}
+  ADMIN_USER: ${{ secrets.ADMIN_USER || secrets.RFQ_ADMIN_USER || 'admin' }}
+  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || secrets.RFQ_ADMIN_PASSWORD }}
+  ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET || secrets.ADMIN_PASSWORD || secrets.RFQ_ADMIN_PASSWORD }}
 
 jobs:
   deploy:
@@ -91,9 +92,10 @@ jobs:
 
       - name: Activate release
         run: |
-          RFQ_ADMIN_USER_B64="$(printf '%s' "$RFQ_ADMIN_USER" | base64 -w0)"
-          RFQ_ADMIN_PASSWORD_B64="$(printf '%s' "$RFQ_ADMIN_PASSWORD" | base64 -w0)"
-          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=~/.ssh/known_hosts "${{ secrets.VPS_USER }}@$VPS_HOST_CLEAN" "APP_NAME='$APP_NAME' APP_PORT='$APP_PORT' DEPLOY_PATH='$DEPLOY_PATH' RFQ_ADMIN_USER_B64='$RFQ_ADMIN_USER_B64' RFQ_ADMIN_PASSWORD_B64='$RFQ_ADMIN_PASSWORD_B64' bash -s" <<'EOF'
+          ADMIN_USER_B64="$(printf '%s' "$ADMIN_USER" | base64 -w0)"
+          ADMIN_PASSWORD_B64="$(printf '%s' "$ADMIN_PASSWORD" | base64 -w0)"
+          ADMIN_SESSION_SECRET_B64="$(printf '%s' "$ADMIN_SESSION_SECRET" | base64 -w0)"
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=~/.ssh/known_hosts "${{ secrets.VPS_USER }}@$VPS_HOST_CLEAN" "APP_NAME='$APP_NAME' APP_PORT='$APP_PORT' DEPLOY_PATH='$DEPLOY_PATH' ADMIN_USER_B64='$ADMIN_USER_B64' ADMIN_PASSWORD_B64='$ADMIN_PASSWORD_B64' ADMIN_SESSION_SECRET_B64='$ADMIN_SESSION_SECRET_B64' bash -s" <<'EOF'
           export PATH="$HOME/.nvm/versions/node/v20/bin:$HOME/.nvm/versions/node/v22/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
           if [ -s "$HOME/.nvm/nvm.sh" ]; then
             . "$HOME/.nvm/nvm.sh"
@@ -105,8 +107,9 @@ jobs:
           APP_NAME="${APP_NAME:-hongyuan}"
           APP_PORT="${APP_PORT:-3000}"
           DEPLOY_PATH="${DEPLOY_PATH:-/var/www/hongyuan}"
-          RFQ_ADMIN_USER="$(printf '%s' "${RFQ_ADMIN_USER_B64:-}" | base64 -d 2>/dev/null || printf 'admin')"
-          RFQ_ADMIN_PASSWORD="$(printf '%s' "${RFQ_ADMIN_PASSWORD_B64:-}" | base64 -d 2>/dev/null || true)"
+          ADMIN_USER="$(printf '%s' "${ADMIN_USER_B64:-}" | base64 -d 2>/dev/null || printf 'admin')"
+          ADMIN_PASSWORD="$(printf '%s' "${ADMIN_PASSWORD_B64:-}" | base64 -d 2>/dev/null || true)"
+          ADMIN_SESSION_SECRET="$(printf '%s' "${ADMIN_SESSION_SECRET_B64:-}" | base64 -d 2>/dev/null || true)"
           RFQ_DATA_DIR="${RFQ_DATA_DIR:-$DEPLOY_PATH/shared/rfq}"
           RELEASE_ID="$(date +%Y%m%d%H%M%S)"
           RELEASE_DIR="$DEPLOY_PATH/releases/$RELEASE_ID"
@@ -148,7 +151,7 @@ jobs:
 
           cd "$DEPLOY_PATH/current"
           pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
-          PORT="$APP_PORT" NODE_ENV=production RFQ_ADMIN_USER="$RFQ_ADMIN_USER" RFQ_ADMIN_PASSWORD="$RFQ_ADMIN_PASSWORD" RFQ_DATA_DIR="$RFQ_DATA_DIR" pm2 start ecosystem.config.cjs --env production --update-env
+          PORT="$APP_PORT" NODE_ENV=production ADMIN_USER="$ADMIN_USER" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_SESSION_SECRET="$ADMIN_SESSION_SECRET" RFQ_ADMIN_USER="$ADMIN_USER" RFQ_ADMIN_PASSWORD="$ADMIN_PASSWORD" RFQ_DATA_DIR="$RFQ_DATA_DIR" pm2 start ecosystem.config.cjs --env production --update-env
           pm2 flush "$APP_NAME" >/dev/null 2>&1 || true
           pm2 save
 
