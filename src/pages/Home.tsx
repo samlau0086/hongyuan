@@ -76,7 +76,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-slate-900 text-white pt-32 pb-24 lg:pt-40 lg:pb-32">
         <div className="absolute inset-0 opacity-100">
-           <img src="/hongyuan-banner.jpg" alt="CNC Machining Banner" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+           <img src="/home-banner.jpg" alt="CNC Machining Banner" className="w-full h-full object-cover" />
         </div>
         <div className="absolute inset-0 bg-slate-900/70"></div>
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 relative z-10">
