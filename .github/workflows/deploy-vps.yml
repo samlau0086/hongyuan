@@ -41,13 +41,12 @@ jobs:
 
       - name: Verify sample images
         run: |
-          test -f dist/samples/IMG_1.jpg
-          test -f dist/samples/IMG_2.jpg
-          test -f dist/samples/IMG_3.jpg
-          test -f dist/samples/IMG_4.jpg
-          test -f dist/samples/IMG_5.jpg
-          test -f dist/samples/IMG_6.jpg
-          test -f dist/samples/IMG_7.jpg
+          test -f "dist/samples/Carbon Steel CNC Milled Parts.jpg"
+          test -f "dist/samples/CNC Milled Aluminum Part with Clear Anodizing.jpg"
+          test -f "dist/samples/CNC Turning Parts.jpg"
+          test -f "dist/samples/Metal Bellows Expansion Joint.jpg"
+          test -f "dist/samples/Precision cam plate with tight tolerance control.jpg"
+          test -f "dist/samples/Precision Machined Flange Housing.jpg"
 
       - name: Pack release
         run: |
