@@ -111,6 +111,7 @@ jobs:
           ADMIN_PASSWORD="$(printf '%s' "${ADMIN_PASSWORD_B64:-}" | base64 -d 2>/dev/null || true)"
           ADMIN_SESSION_SECRET="$(printf '%s' "${ADMIN_SESSION_SECRET_B64:-}" | base64 -d 2>/dev/null || true)"
           RFQ_DATA_DIR="${RFQ_DATA_DIR:-$DEPLOY_PATH/shared/rfq}"
+          BLOG_DATA_DIR="${BLOG_DATA_DIR:-$DEPLOY_PATH/shared/blog}"
           RELEASE_ID="$(date +%Y%m%d%H%M%S)"
           RELEASE_DIR="$DEPLOY_PATH/releases/$RELEASE_ID"
 
@@ -135,7 +136,7 @@ jobs:
             exit 1
           fi
 
-          mkdir -p "$RELEASE_DIR" "$RFQ_DATA_DIR"
+          mkdir -p "$RELEASE_DIR" "$RFQ_DATA_DIR" "$BLOG_DATA_DIR"
           tar -xzf "$DEPLOY_PATH/release.tar.gz" -C "$RELEASE_DIR"
           rm -f "$DEPLOY_PATH/release.tar.gz"
 
@@ -151,7 +152,7 @@ jobs:
 
           cd "$DEPLOY_PATH/current"
           pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
-          PORT="$APP_PORT" NODE_ENV=production ADMIN_USER="$ADMIN_USER" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_SESSION_SECRET="$ADMIN_SESSION_SECRET" RFQ_ADMIN_USER="$ADMIN_USER" RFQ_ADMIN_PASSWORD="$ADMIN_PASSWORD" RFQ_DATA_DIR="$RFQ_DATA_DIR" pm2 start ecosystem.config.cjs --env production --update-env
+          PORT="$APP_PORT" NODE_ENV=production ADMIN_USER="$ADMIN_USER" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_SESSION_SECRET="$ADMIN_SESSION_SECRET" RFQ_ADMIN_USER="$ADMIN_USER" RFQ_ADMIN_PASSWORD="$ADMIN_PASSWORD" RFQ_DATA_DIR="$RFQ_DATA_DIR" BLOG_DATA_DIR="$BLOG_DATA_DIR" pm2 start ecosystem.config.cjs --env production --update-env
           pm2 flush "$APP_NAME" >/dev/null 2>&1 || true
           pm2 save
 

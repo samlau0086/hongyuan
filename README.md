@@ -58,8 +58,12 @@ The Contact form submits RFQ data and drawing files to the app backend.
 - Admin login: `/admin/login`
 - Admin dashboard: `/admin`
 - RFQ admin page: `/admin/rfq`
+- Blog admin page: `/admin/blog`
+- Public blog API: `/api/blog/posts`
+- Blog post detail API: `/api/blog/posts/:slug`
 - Default admin username: `admin`
 - Admin password: set `ADMIN_PASSWORD` in GitHub Actions secrets.
 - Stored data on VPS: `$VPS_DEPLOY_PATH/shared/rfq`
+- Stored blog posts on VPS: `$VPS_DEPLOY_PATH/shared/blog`
 
-Uploaded files are downloadable from the admin page after login.
+Uploaded RFQ files are downloadable from the admin page after login. Blog posts are edited with Markdown and can include an uploaded cover image.

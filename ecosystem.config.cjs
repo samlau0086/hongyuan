@@ -13,6 +13,7 @@ module.exports = {
         RFQ_ADMIN_USER: process.env.RFQ_ADMIN_USER || "admin",
         RFQ_ADMIN_PASSWORD: process.env.RFQ_ADMIN_PASSWORD,
         RFQ_DATA_DIR: process.env.RFQ_DATA_DIR,
+        BLOG_DATA_DIR: process.env.BLOG_DATA_DIR,
       },
     },
   ],

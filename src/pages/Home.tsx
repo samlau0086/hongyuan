@@ -40,17 +40,15 @@ export default function Home() {
     const fetchLatestPosts = async () => {
       try {
         setPostsLoading(true);
-        const response = await fetch('/api/posts');
+        const response = await fetch('/api/blog/posts');
         if (response.ok) {
           const data = await response.json();
           const formattedArticles = data.slice(0, 4).map((post: any) => {
-            const decodedTitle = new DOMParser().parseFromString(post.title.rendered, 'text/html').body.textContent || post.title.rendered;
             return {
-              title: decodedTitle,
+              title: post.title,
               date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-              img: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://images.unsplash.com/photo-1590496794008-383c8070b257?q=80&w=2070&auto=format&fit=crop',
-              slug: post.slug,
-              link: post.link
+              img: post.img || '/home-banner.jpg',
+              slug: post.slug
             };
           });
           setLatestPosts(formattedArticles);
