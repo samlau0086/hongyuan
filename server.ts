@@ -24,6 +24,52 @@ function sanitizeFileName(fileName: string) {
   return path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "upload";
 }
 
+function decodeHeaderValue(value = "") {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function decodeMultipartFileName(disposition: string) {
+  const encodedFileName = disposition.match(/filename\*=UTF-8''([^;\r\n]+)/i)?.[1];
+  if (encodedFileName) {
+    return decodeHeaderValue(encodedFileName.replace(/^"|"$/g, ""));
+  }
+
+  const fileName = disposition.match(/filename="([^"]*)"/i)?.[1] || "";
+  if (!fileName) return "";
+
+  try {
+    return Buffer.from(fileName, "latin1").toString("utf8");
+  } catch {
+    return fileName;
+  }
+}
+
+function repairMojibake(value: string) {
+  if (!/[ÃÂÅåçéèæ]/.test(value)) return value;
+  try {
+    return Buffer.from(value, "latin1").toString("utf8");
+  } catch {
+    return value;
+  }
+}
+
+function getClientIp(req: any) {
+  const forwardedFor = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return forwardedFor || req.socket?.remoteAddress || "";
+}
+
+function deleteDirectoryIfInside(targetPath: string, parentDir: string) {
+  const resolvedTarget = path.resolve(targetPath);
+  const resolvedParent = path.resolve(parentDir);
+  if (resolvedTarget.startsWith(resolvedParent + path.sep) && fs.existsSync(resolvedTarget)) {
+    fs.rmSync(resolvedTarget, { recursive: true, force: true });
+  }
+}
+
 function ensureRfqStore() {
   fs.mkdirSync(rfqDataDir, { recursive: true });
   if (!fs.existsSync(rfqRecordsPath)) {
@@ -431,7 +477,7 @@ function parseMultipartForm(body: Buffer, contentType: string) {
     const content = part.slice(headerEnd + 4);
     const disposition = rawHeaders.match(/content-disposition:[^\r\n]+/i)?.[0] || "";
     const name = disposition.match(/name="([^"]+)"/i)?.[1];
-    const filename = disposition.match(/filename="([^"]*)"/i)?.[1];
+    const filename = decodeMultipartFileName(disposition);
     const mimeType = rawHeaders.match(/content-type:\s*([^\r\n]+)/i)?.[1]?.trim() || "application/octet-stream";
 
     if (!name) continue;
@@ -546,6 +592,10 @@ async function startServer() {
         phone: fields.phone || "",
         deliveryDate: fields.deliveryDate || "",
         requirements: fields.requirements || "",
+        ip: getClientIp(req),
+        userAgent: String(req.headers["user-agent"] || ""),
+        referer: String(req.headers.referer || ""),
+        uploadDir,
         files: savedFiles,
       };
 
@@ -807,9 +857,14 @@ async function startServer() {
       .map((record) => {
         const fileLinks = record.files?.length
           ? record.files
-              .map((file: any, index: number) => `<a href="/admin/rfq/${record.id}/files/${index}">${escapeHtml(file.originalName)}</a>`)
+              .map((file: any, index: number) => `<a href="/admin/rfq/${record.id}/files/${index}">${escapeHtml(repairMojibake(file.originalName))}</a>`)
               .join("<br>")
           : "No files";
+        const meta = [
+          record.ip ? `IP: ${escapeHtml(record.ip)}` : "",
+          record.userAgent ? `UA: ${escapeHtml(record.userAgent)}` : "",
+          record.referer ? `Ref: ${escapeHtml(record.referer)}` : "",
+        ].filter(Boolean).join("<br>");
 
         return `
           <tr>
@@ -819,6 +874,12 @@ async function startServer() {
             <td>${escapeHtml(record.deliveryDate)}</td>
             <td>${escapeHtml(record.requirements)}</td>
             <td>${fileLinks}</td>
+            <td>${meta || "N/A"}</td>
+            <td>
+              <form method="post" action="/admin/rfq/${record.id}/delete" onsubmit="return confirm('Delete this RFQ and its uploaded files?')" style="margin:0">
+                <button class="button danger" type="submit">Delete</button>
+              </form>
+            </td>
           </tr>
         `;
       })
@@ -833,7 +894,7 @@ async function startServer() {
           records.length
             ? `<table>
                 <thead>
-                  <tr><th>Date</th><th>Contact</th><th>Email / Phone</th><th>Delivery</th><th>Requirements</th><th>Files</th></tr>
+                  <tr><th>Date</th><th>Contact</th><th>Email / Phone</th><th>Delivery</th><th>Requirements</th><th>Files</th><th>IP / UA</th><th>Actions</th></tr>
                 </thead>
                 <tbody>${rows}</tbody>
               </table>`
@@ -841,6 +902,21 @@ async function startServer() {
         }`
       )
     );
+  });
+
+  app.post("/admin/rfq/:id/delete", (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const records = readRfqRecords();
+    const record = records.find((item) => item.id === req.params.id);
+    if (record?.uploadDir) {
+      deleteDirectoryIfInside(record.uploadDir, path.join(rfqDataDir, "uploads"));
+    } else if (record?.id) {
+      deleteDirectoryIfInside(path.join(rfqDataDir, "uploads", record.id), path.join(rfqDataDir, "uploads"));
+    }
+
+    writeRfqRecords(records.filter((item) => item.id !== req.params.id));
+    res.redirect("/admin/rfq");
   });
 
   app.get("/admin/rfq/:id/files/:index", (req, res) => {
@@ -855,7 +931,7 @@ async function startServer() {
       return;
     }
 
-    res.download(file.path, file.originalName);
+    res.download(file.path, repairMojibake(file.originalName));
   });
 
   // Vite middleware for development
