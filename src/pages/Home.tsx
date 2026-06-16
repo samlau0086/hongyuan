@@ -164,7 +164,7 @@ export default function Home() {
               { 
                 icon: Key, title: 'Handling and\nTurnkey Equipment', 
                 img: '/industries/Handling and turnkey equipment.jpg',
-                items: ['Handling Modules', 'Turnkey Systems', 'Custom Frames', 'Assembly-Ready Parts'] 
+                items: ['Pick-and-Place Systems', 'Conveyor & Transfer Systems', 'Assembly Stations', 'Material Feeding Units'] 
               },
               { 
                 icon: Wrench, title: 'Jigs &\nFixtures', 
@@ -284,7 +284,7 @@ export default function Home() {
             {/* Middle Col - Image */}
             <div className="h-64 lg:h-[400px] w-full bg-slate-200 p-2 bg-white border border-slate-200 shadow-sm">
                <div className="w-full h-full bg-slate-100 overflow-hidden relative">
-                 <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070&auto=format&fit=crop" alt="Quality Inspection" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" />
+                <img src="/home/quality.jpg" alt="Quality Inspection" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
                </div>
             </div>
             
