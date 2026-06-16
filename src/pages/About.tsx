@@ -9,6 +9,8 @@ export default function About() {
     { src: '/samples/Metal%20Bellows%20Expansion%20Joint.jpg', title: 'Metal Bellows Expansion Joint' },
     { src: '/samples/Precision%20cam%20plate%20with%20tight%20tolerance%20control.jpg', title: 'Precision Cam Plate with Tight Tolerance Control' },
     { src: '/samples/Precision%20Machined%20Flange%20Housing.jpg', title: 'Precision Machined Flange Housing' },
+    { src: '/samples/TiN%20Coated%20Precision%20Support%20Block.jpg', title: 'TiN Coated Precision Support Block' },
+    { src: '/samples/Wire%20EDM%20Machined%20Gear%20with%20H7%20Inner%20Diameter%20Tolerance.jpg', title: 'Wire EDM Machined Gear with H7 Inner Diameter Tolerance' },
   ];
 
   return (

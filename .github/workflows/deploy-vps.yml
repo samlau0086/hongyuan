@@ -47,6 +47,8 @@ jobs:
           test -f "dist/samples/Metal Bellows Expansion Joint.jpg"
           test -f "dist/samples/Precision cam plate with tight tolerance control.jpg"
           test -f "dist/samples/Precision Machined Flange Housing.jpg"
+          test -f "dist/samples/TiN Coated Precision Support Block.jpg"
+          test -f "dist/samples/Wire EDM Machined Gear with H7 Inner Diameter Tolerance.jpg"
 
       - name: Pack release
         run: |
