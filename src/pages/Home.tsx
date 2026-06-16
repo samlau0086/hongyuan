@@ -82,10 +82,10 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-white">
-              Precision Machining<br />with Japanese Quality Discipline
+              Your Reliable Machining Partner for Custom Parts<br />Japanese Quality. Shenzhen Speed.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 mb-10 leading-relaxed max-w-2xl">
-              Serving Semiconductor, Automation and Robotics Industries with Reliable CNC Manufacturing.
+              Tight tolerance machining, full inspection, and reliable delivery for automation, and robotics industries.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -143,32 +143,32 @@ export default function Home() {
             {[
               { 
                 icon: Cpu, title: 'Semiconductor\nEquipment', 
-                img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop',
+                img: '/industries/semiconductor equipment.jpg',
                 items: ['Wafer Handling', 'Inspection Equipment', 'Vacuum Systems', 'Fixture Components'] 
               },
               { 
                 icon: Bot, title: 'Automation &\nRobotics', 
-                img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop',
+                img: '/industries/automation & robotics.jpg',
                 items: ['Robot Components', 'End Effectors', 'Motion Systems', 'Assembly Equipment'] 
               },
               { 
                 icon: Car, title: 'Automotive\nEquipment', 
-                img: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2070&auto=format&fit=crop',
+                img: '/industries/automotive equipment.jpg',
                 items: ['Production Line Parts', 'Jigs & Fixtures', 'Testing Equipment', 'Precision Components'] 
               },
               { 
                 icon: Utensils, title: 'Food Processing\nEquipment', 
-                img: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?q=80&w=2070&auto=format&fit=crop',
+                img: '/industries/food &packaging equipment.jpg',
                 items: ['Conveyor Parts', 'Filling Machines', 'Cutting Components', 'Hygienic Equipment'] 
               },
               { 
-                icon: Key, title: 'Key Cutting\nEquipment', 
-                img: 'https://images.unsplash.com/photo-1580983554867-d16ed417b351?q=80&w=2070&auto=format&fit=crop',
-                items: ['Key Cutting Parts', 'Precision Guides', 'Clamping Components', 'Wear-Resistant Parts'] 
+                icon: Key, title: 'Handling and\nTurnkey Equipment', 
+                img: '/industries/Handling and turnkey equipment.jpg',
+                items: ['Handling Modules', 'Turnkey Systems', 'Custom Frames', 'Assembly-Ready Parts'] 
               },
               { 
                 icon: Wrench, title: 'Jigs &\nFixtures', 
-                img: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop',
+                img: '/industries/jigs&Fixtures.jpg',
                 items: ['Assembly Jigs', 'Inspection Fixtures', 'Machining Fixtures', 'Welding Jigs'] 
               }
             ].map((industry, idx) => (
