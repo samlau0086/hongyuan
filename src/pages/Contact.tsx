@@ -174,7 +174,7 @@ export default function Contact() {
                           className="sr-only"
                           accept=".pdf,.step,.stp,.iges,.igs,.dwg,.dxf,.zip,.rar,.7z"
                           onChange={(event) => {
-                            const files = Array.from(event.currentTarget.files || []);
+                            const files = Array.from(event.currentTarget.files || []) as File[];
                             setSelectedFileName(files.length > 1 ? `${files.length} files selected` : files[0]?.name || '');
                           }}
                         />

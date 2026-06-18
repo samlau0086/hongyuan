@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { BlogSummary, useBlogInitialData } from '../blogInitialData';
 
 type BlogArticle = {
   title: string;
@@ -12,9 +13,10 @@ type BlogArticle = {
 };
 
 export default function Blog() {
+  const initialBlogData = useBlogInitialData();
   const [currentPage, setCurrentPage] = useState(1);
-  const [articles, setArticles] = useState<BlogArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [articles, setArticles] = useState<BlogArticle[]>(formatBlogArticles(initialBlogData.posts || []));
+  const [loading, setLoading] = useState(!initialBlogData.posts);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const itemsPerPage = 18;
   const navigate = useNavigate();
@@ -28,13 +30,7 @@ export default function Blog() {
         }
 
         const data = await response.json();
-        setArticles(data.map((post: any) => ({
-          title: post.title,
-          date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-          img: post.img || '/home-banner.jpg',
-          slug: post.slug,
-          excerpt: post.excerpt,
-        })));
+        setArticles(formatBlogArticles(data));
       } catch (error: any) {
         setFetchError(error.message || 'Failed to load blog posts.');
         setArticles([]);
@@ -153,4 +149,14 @@ export default function Blog() {
       </section>
     </div>
   );
+}
+
+function formatBlogArticles(posts: BlogSummary[]): BlogArticle[] {
+  return posts.map((post) => ({
+    title: post.title,
+    date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    img: post.img || '/home-banner.jpg',
+    slug: post.slug,
+    excerpt: post.excerpt,
+  }));
 }

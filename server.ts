@@ -191,6 +191,290 @@ function getBlogExcerpt(markdown: string, explicitExcerpt = "") {
     .slice(0, 180);
 }
 
+function getPublishedBlogPosts() {
+  return readBlogPosts()
+    .filter((post) => post.status !== "draft" && post.title && post.slug)
+    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+}
+
+function formatPublicDate(value: string, style: "short" | "long" = "short") {
+  const date = new Date(value || "");
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: style === "long" ? "long" : "short",
+    day: style === "long" ? "numeric" : "2-digit",
+    year: "numeric",
+  });
+}
+
+function getPublicBlogSummary(post: any) {
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    date: post.date,
+    excerpt: post.excerpt,
+    img: post.coverImage || "",
+  };
+}
+
+function getPublicBlogPost(post: any) {
+  return {
+    ...getPublicBlogSummary(post),
+    content: post.content || "",
+    contentHtml: markdownToHtml(post.content || ""),
+  };
+}
+
+function serializePublicData(data: unknown) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+function getBuiltAssetTags(distPath: string) {
+  const indexPath = path.join(distPath, "index.html");
+  if (!fs.existsSync(indexPath)) return "";
+
+  const html = fs.readFileSync(indexPath, "utf8");
+  return (
+    html.match(/<script\b[^>]*\bsrc="\/assets\/[^"]+"[^>]*><\/script>|<link\b[^>]*\bhref="\/assets\/[^"]+"[^>]*>/g) || []
+  ).join("\n");
+}
+
+function renderPublicHeader(active = "") {
+  const nav = [
+    { href: "/", label: "Home", id: "home" },
+    { href: "/about", label: "About Us", id: "about" },
+    { href: "/capabilities", label: "Capabilities", id: "capabilities" },
+    { href: "/quality", label: "Quality", id: "quality" },
+    { href: "/blog", label: "Blog", id: "blog" },
+    { href: "/contact", label: "Contact Us", id: "contact" },
+  ];
+
+  return `<header class="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
+    <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
+      <div class="flex bg-transparent h-20 items-center justify-between">
+        <div class="flex-shrink-0 flex items-center gap-2">
+          <a class="flex items-center gap-2" href="/">
+            <span class="font-extrabold italic text-blue-700 text-[28px] tracking-tighter pr-1">HY</span>
+            <div class="flex flex-col justify-center border-l-2 border-slate-200 pl-3 leading-none">
+              <span class="font-black text-[22px] text-slate-900 tracking-wide mb-1">HONGYUAN</span>
+              <span class="font-bold text-[10px] text-slate-500 tracking-[0.25em]">PRECISION</span>
+            </div>
+          </a>
+        </div>
+        <nav class="hidden md:flex items-center gap-4 lg:gap-8">
+          ${nav
+            .map(
+              (item) =>
+                `<a class="text-sm font-medium transition-colors hover:text-accent relative py-2 whitespace-nowrap ${
+                  active === item.id ? "text-accent" : "text-gray-600"
+                }" href="${item.href}">${item.label}${active === item.id ? '<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"></div>' : ""}</a>`
+            )
+            .join("")}
+        </nav>
+        <div class="hidden md:block">
+          <a class="bg-blue-700 text-white px-4 lg:px-6 py-2.5 text-xs lg:text-sm font-semibold rounded-sm shadow-sm hover:bg-blue-800 transition-colors whitespace-nowrap" href="/contact">UPLOAD DRAWINGS &amp; RFQ</a>
+        </div>
+      </div>
+    </div>
+  </header>`;
+}
+
+function renderPublicFooter() {
+  return `<footer class="bg-slate-900 text-slate-300">
+    <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 py-16">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div class="space-y-6">
+          <a class="flex items-center gap-2" href="/">
+            <span class="font-extrabold italic text-blue-500 text-[28px] tracking-tighter pr-1">HY</span>
+            <div class="flex flex-col justify-center border-l-2 border-slate-700 pl-3 leading-none">
+              <span class="font-black text-[22px] text-white tracking-wide mb-1">HONGYUAN</span>
+              <span class="font-bold text-[10px] text-slate-400 tracking-[0.25em]">PRECISION</span>
+            </div>
+          </a>
+          <p class="text-sm leading-relaxed text-slate-400">Precision Machining with Japanese Quality Discipline. We help engineers reduce sourcing complexity and control machining quality from prototype to batch production.</p>
+        </div>
+        <div>
+          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Quick Links</h3>
+          <ul class="space-y-4">
+            <li><a class="text-sm hover:text-white transition-colors" href="/about">About Us</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="/capabilities">Capabilities</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="/quality">Quality Control</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="/blog">Technical Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Capabilities</h3>
+          <ul class="space-y-4">
+            <li class="text-sm text-slate-400">CNC Milling</li>
+            <li class="text-sm text-slate-400">CNC Turning</li>
+            <li class="text-sm text-slate-400">Precision Grinding</li>
+            <li class="text-sm text-slate-400">EDM &amp; Wire Cut</li>
+            <li class="text-sm text-slate-400">Surface Finishing</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Contact Us</h3>
+          <ul class="space-y-4">
+            <li><a href="mailto:lynn.lee@hongyuan-precision.com" class="text-sm hover:text-white transition-colors">lynn.lee@hongyuan-precision.com</a></li>
+            <li class="text-sm">0086-755-23059684 (Tel)<br>+8618926541701 (Mob/WhatsApp)</li>
+            <li class="text-sm">Shajing, Bao'an District<br>Shenzhen City, China</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>`;
+}
+
+function renderPublicShell({
+  distPath,
+  title,
+  description,
+  body,
+  blogInitialData,
+  status = 200,
+}: {
+  distPath: string;
+  title: string;
+  description: string;
+  body: string;
+  blogInitialData: unknown;
+  status?: number;
+}) {
+  return {
+    status,
+    html: `<!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${escapeHtml(title)}</title>
+          <meta name="description" content="${escapeHtml(description)}">
+          <meta property="og:title" content="${escapeHtml(title)}">
+          <meta property="og:description" content="${escapeHtml(description)}">
+          <meta property="og:type" content="website">
+          <meta name="twitter:card" content="summary_large_image">
+          ${getBuiltAssetTags(distPath)}
+        </head>
+        <body>
+          <div id="root">${body}</div>
+          <script>window.__BLOG_INITIAL_DATA__=${serializePublicData(blogInitialData)};</script>
+        </body>
+      </html>`,
+  };
+}
+
+function renderDynamicBlogIndex(distPath: string) {
+  const posts = getPublishedBlogPosts();
+  const summaries = posts.map(getPublicBlogSummary);
+  const cards = summaries.length
+    ? summaries
+        .map(
+          (post) => `<a class="group block" href="/blog/${escapeHtml(post.slug)}">
+            <div class="rounded-lg overflow-hidden mb-4 border border-gray-200 bg-white">
+              <img src="${escapeHtml(post.img || "/home-banner.jpg")}" alt="${escapeHtml(post.title)}" class="w-full h-32 md:h-40 object-cover group-hover:scale-105 transition-transform duration-500">
+            </div>
+            <h2 class="text-[15px] font-bold text-slate-900 leading-snug mb-2 group-hover:text-blue-700 transition-colors line-clamp-3">${escapeHtml(post.title)}</h2>
+            <div class="text-xs text-slate-500">${escapeHtml(formatPublicDate(post.date))}</div>
+            ${post.excerpt ? `<p class="mt-3 text-xs text-slate-600 leading-relaxed">${escapeHtml(post.excerpt)}</p>` : ""}
+          </a>`
+        )
+        .join("")
+    : '<div class="bg-white border border-gray-200 p-12 text-center text-slate-600">No blog posts have been published yet.</div>';
+
+  const body = `<div class="min-h-screen flex flex-col bg-primary-50">
+    ${renderPublicHeader("blog")}
+    <main class="flex-grow flex flex-col">
+      <div class="bg-white">
+        <section class="bg-primary-900 border-b border-gray-200 py-16">
+          <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-display font-bold text-white mb-4">Technical Blog</h1>
+            <p class="text-xl text-gray-400 max-w-2xl">Insights on precision machining, quality control, and engineering best practices.</p>
+          </div>
+        </section>
+        <section class="py-24 bg-slate-50 min-h-[600px]">
+          <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">${cards}</div>
+          </div>
+        </section>
+      </div>
+    </main>
+    ${renderPublicFooter()}
+  </div>`;
+
+  return renderPublicShell({
+    distPath,
+    title: "Technical Blog | Precision Machining Solutions",
+    description: "Insights on precision machining, quality control, and engineering best practices.",
+    body,
+    blogInitialData: { posts: summaries },
+  });
+}
+
+function renderDynamicBlogPost(distPath: string, slug: string) {
+  const posts = getPublishedBlogPosts();
+  const post = posts.find((item) => item.slug === slug);
+  const summaries = posts.map(getPublicBlogSummary);
+
+  if (!post) {
+    const body = `<div class="min-h-screen flex flex-col bg-primary-50">
+      ${renderPublicHeader("blog")}
+      <main class="flex-grow flex flex-col">
+        <div class="pt-24 pb-16 min-h-[60vh] flex flex-col items-center justify-center text-center px-4 bg-white">
+          <h1 class="text-3xl font-bold text-slate-900 mb-4">Post Not Found</h1>
+          <p class="text-slate-600 mb-8">The article you're looking for doesn't exist or has been removed.</p>
+          <a href="/blog" class="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">Back to Blog</a>
+        </div>
+      </main>
+      ${renderPublicFooter()}
+    </div>`;
+    return renderPublicShell({
+      distPath,
+      title: "Post Not Found | Precision Machining Solutions",
+      description: "The requested blog post was not found.",
+      body,
+      blogInitialData: { posts: summaries, post: null },
+      status: 404,
+    });
+  }
+
+  const publicPost = getPublicBlogPost(post);
+  const description = post.excerpt || "Read about precision manufacturing, CNC machining and insights.";
+  const body = `<div class="min-h-screen flex flex-col bg-primary-50">
+    ${renderPublicHeader("blog")}
+    <main class="flex-grow flex flex-col">
+      <div class="pt-24 pb-24 bg-white">
+        <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <a href="/blog" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 mb-8 transition-colors">Back to Blog</a>
+          ${
+            publicPost.img
+              ? `<img src="${escapeHtml(publicPost.img)}" alt="${escapeHtml(publicPost.title)}" class="w-full h-auto max-h-[500px] object-cover rounded-xl mb-10">`
+              : ""
+          }
+          <header class="mb-10">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight mb-6">${escapeHtml(publicPost.title)}</h1>
+            <div class="flex items-center gap-4 text-slate-500 text-sm">
+              <time datetime="${escapeHtml(publicPost.date)}">${escapeHtml(formatPublicDate(publicPost.date, "long"))}</time>
+            </div>
+          </header>
+          <div class="prose prose-lg prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-a:text-blue-700 hover:prose-a:text-blue-800 prose-img:rounded-xl">
+            ${publicPost.contentHtml}
+          </div>
+        </article>
+      </div>
+    </main>
+    ${renderPublicFooter()}
+  </div>`;
+
+  return renderPublicShell({
+    distPath,
+    title: `${post.title} - Hongyuan Precision | Precision Machining Solutions`,
+    description,
+    body,
+    blogInitialData: { posts: summaries, post: publicPost },
+  });
+}
+
 function getAdminUser() {
   return process.env.ADMIN_USER || process.env.RFQ_ADMIN_USER || "admin";
 }
@@ -946,6 +1230,17 @@ async function startServer() {
     // Production: serve static files from the built server directory.
     const distPath = __dirname;
     console.log(`Serving static files from ${distPath}`);
+
+    app.get("/blog", (req, res) => {
+      const rendered = renderDynamicBlogIndex(distPath);
+      res.status(rendered.status).type("html").send(rendered.html);
+    });
+
+    app.get("/blog/:slug", (req, res) => {
+      const rendered = renderDynamicBlogPost(distPath, req.params.slug);
+      res.status(rendered.status).type("html").send(rendered.html);
+    });
+
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

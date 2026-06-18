@@ -22,6 +22,7 @@ import {
   Wrench
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { BlogSummary, useBlogInitialData } from '../blogInitialData';
 
 const capabilityImages: Record<string, string> = {
   'CNC Milling': '/capabilities/cnc-miling.jpg',
@@ -33,8 +34,10 @@ const capabilityImages: Record<string, string> = {
 };
 
 export default function Home() {
-  const [latestPosts, setLatestPosts] = useState<any[]>([]);
-  const [postsLoading, setPostsLoading] = useState(true);
+  const initialBlogData = useBlogInitialData();
+  const initialPosts = formatLatestPosts(initialBlogData.posts || []);
+  const [latestPosts, setLatestPosts] = useState<any[]>(initialPosts);
+  const [postsLoading, setPostsLoading] = useState(!initialBlogData.posts);
 
   useEffect(() => {
     const fetchLatestPosts = async () => {
@@ -43,15 +46,7 @@ export default function Home() {
         const response = await fetch('/api/blog/posts');
         if (response.ok) {
           const data = await response.json();
-          const formattedArticles = data.slice(0, 4).map((post: any) => {
-            return {
-              title: post.title,
-              date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-              img: post.img || '/home-banner.jpg',
-              slug: post.slug
-            };
-          });
-          setLatestPosts(formattedArticles);
+          setLatestPosts(formatLatestPosts(data));
         }
       } catch (error) {
         console.error("Failed to fetch latest posts:", error);
@@ -403,4 +398,13 @@ export default function Home() {
       </section>
     </div>
   );
+}
+
+function formatLatestPosts(posts: BlogSummary[]) {
+  return posts.slice(0, 4).map((post) => ({
+    title: post.title,
+    date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    img: post.img || '/home-banner.jpg',
+    slug: post.slug,
+  }));
 }

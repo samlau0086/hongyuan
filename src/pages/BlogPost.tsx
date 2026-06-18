@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useBlogInitialData } from '../blogInitialData';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const initialBlogData = useBlogInitialData();
+  const initialPost = initialBlogData.post?.slug === slug ? initialBlogData.post : null;
+  const [post, setPost] = useState<any>(initialPost);
+  const [loading, setLoading] = useState(!initialPost);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
