@@ -1,5 +1,18 @@
 import SEO from '../components/SEO';
 
+const inspectionImages = [
+  { src: '/quality/2-Perpendicularity%20Inspection-TESA%20height%20gauge.jpg', alt: 'Perpendicularity inspection with TESA height gauge' },
+  { src: '/quality/3-Height%20gauge-TESA.jpg', alt: 'TESA height gauge inspection' },
+  { src: '/quality/4-%20Profile%20projector.jpg', alt: 'Profile projector inspection' },
+  { src: '/quality/5-%20gloss%20meter-Surface%20Gloss%20Measurement.jpg', alt: 'Surface gloss measurement with gloss meter' },
+  { src: '/quality/6-%20micrometer.jpg', alt: 'Micrometer inspection' },
+  { src: '/quality/7-%20Outer%20Diameter%20Inspection-micrometers.jpg', alt: 'Outer diameter inspection with micrometers' },
+  { src: '/quality/8-%20Hardness%20Inspection.jpg', alt: 'Hardness inspection' },
+  { src: '/quality/9-%20pin%20gauges%20-Hole%20Diameter%20Inspection.jpg', alt: 'Hole diameter inspection with pin gauges' },
+  { src: '/quality/10-%20Thread%20Inspection%20Using%20Thread%20Gauge.jpg', alt: 'Thread inspection using thread gauge' },
+  { src: '/quality/11-%20Dimensional%20Quality%20Check%20for%20High-Precision%20Turning%20Components.png', alt: 'Dimensional quality check for high precision turning components' },
+];
+
 export default function Quality() {
   return (
     <div className="bg-white">
@@ -93,23 +106,26 @@ export default function Quality() {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-3xl font-display font-bold mb-8 text-primary-900">Calibration & Environment</h2>
-              <div className="space-y-6">
-                 <div>
-                    <h3 className="text-lg font-bold text-primary-900 mb-2">Calibration Records</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Calibration records are maintained to ensure measurement reliability.</p>
-                 </div>
-                 <div className="border-t border-gray-100 pt-6">
-                    <h3 className="text-lg font-bold text-primary-900 mb-2">Traceability</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Measurement traceability supports stable quality control and customer audit requirements.</p>
-                 </div>
-                 <div className="border-t border-gray-100 pt-6">
-                    <h3 className="text-lg font-bold text-primary-900 mb-2">Controlled Inspection Environment</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Inspection conditions are managed to reduce measurement errors caused by temperature, handling or equipment variation.</p>
-                 </div>
-              </div>
+            <div className="overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+              <img
+                src="/quality/1-CMM%20inspect%204.jpg"
+                alt="CMM inspection equipment"
+                className="h-full min-h-[360px] w-full object-cover"
+              />
             </div>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-4">
+            {inspectionImages.map((image) => (
+              <div key={image.src} className="overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  loading="lazy"
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
