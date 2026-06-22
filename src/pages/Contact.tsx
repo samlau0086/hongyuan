@@ -60,10 +60,10 @@ export default function Contact() {
                 <h2 className="text-2xl font-display font-bold text-primary-900 mb-6">Send Us Your Drawings</h2>
                 <div className="prose text-gray-600 text-sm leading-relaxed mb-8">
                   <p>
-                    Send us your drawing files and technical requirements. We will review manufacturability, tolerance feasibility and lead time support.
+                    Upload your drawings and requirements for a fast quotation.
                   </p>
                   <p>
-                    Our engineering team will check your drawings and provide feedback on material, machining process, surface treatment, heat treatment and delivery schedule.
+                    Our engineering team will quickly review manufacturability, tolerance requirements, materials, and lead time - <span style={{ color: '#0000FF' }}>typically within 24 hours</span>.
                   </p>
                 </div>
               </div>
