@@ -5,15 +5,18 @@ export default function Capabilities() {
   return (
     <div className="bg-white">
       <SEO 
-        title="Capabilities" 
-        description="Comprehensive CNC machining and secondary operations for complex geometries and tight tolerances. CNC Turning, Grinding, EDM & Wire Cut." 
+        title="Our Capabilities" 
+        description="From prototype to production, we manufacture custom precision parts based on customer drawings, supporting prototypes, small batches, and stable production with flexible manufacturing resources." 
         keywords="CNC Milling, CNC Turning, Precision Grinding, EDM, Wire Cut, Tolerances, Materials" 
       />
       {/* Header */}
       <section className="bg-primary-900 border-b border-gray-200 py-16">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-display font-bold text-white mb-4">Capabilities</h1>
-          <p className="text-xl text-gray-400 max-w-2xl">Comprehensive CNC machining and secondary operations for complex geometries and tight tolerances.</p>
+          <h1 className="text-4xl font-display font-bold text-white mb-4">Our Capabilities</h1>
+          <p className="text-xl text-gray-300 max-w-3xl font-semibold mb-4">From Prototype to Production, Built Around Your Drawings</p>
+          <p className="text-lg text-gray-400 max-w-4xl leading-relaxed">
+            We manufacture custom precision parts based on customer drawings, supporting prototypes, small batches, and stable production with flexible manufacturing resources.
+          </p>
         </div>
       </section>
 

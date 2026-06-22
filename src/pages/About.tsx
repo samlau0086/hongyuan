@@ -109,6 +109,13 @@ export default function About() {
                 </p>
               </div>
             </div>
+            <div className="overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+              <img
+                src="/about-us/trusted-by-industry-leaders.jpg"
+                alt="Precision machining parts for industry leaders"
+                className="h-full min-h-[360px] w-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
