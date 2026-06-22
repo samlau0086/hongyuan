@@ -155,11 +155,6 @@ export default function Contact() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Expected Delivery Date</label>
-                      <input name="deliveryDate" type="text" placeholder="e.g. 2 weeks, specific date..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
-                    </div>
-
-                    <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Additional Technical Requirements</label>
                       <textarea name="requirements" rows={4} className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"></textarea>
                     </div>
