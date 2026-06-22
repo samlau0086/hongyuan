@@ -12,22 +12,40 @@ export default function Quality() {
       <section className="bg-primary-900 border-b border-gray-200 py-16">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-display font-bold text-white mb-4">Quality Control</h1>
-          <p className="text-xl text-gray-400 max-w-2xl">Quality is built into the process, not only inspected at the end.</p>
+          <p className="text-xl text-gray-400 max-w-4xl">
+            Quality is not just inspection at the end - it starts from drawing review, process control, and disciplined execution throughout production.
+          </p>
         </div>
       </section>
 
       {/* Quality Philosophy */}
       <section className="py-24">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <h2 className="text-3xl font-display font-bold mb-6 text-primary-900">Quality Philosophy</h2>
-            <div className="prose prose-lg text-gray-600 prose-p:leading-relaxed">
-              <p className="mb-6">
-                We believe that precision machining quality depends on process planning, operator discipline, inspection control and continuous communication.
-              </p>
-              <p className="font-medium text-primary-900 border-l-2 border-accent pl-4">
-                Final inspection is important. However, real quality begins before machining starts.
-              </p>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-display font-bold mb-6 text-primary-900">Quality Philosophy</h2>
+              <div className="prose prose-lg text-gray-600 prose-p:leading-relaxed">
+                <h3 className="text-xl font-sans font-bold text-primary-900 mb-4">Our Quality Commitment</h3>
+                <ul className="space-y-3 list-none pl-0">
+                  {[
+                    '100% inspection on critical dimensions',
+                    'Full inspection report available upon request',
+                    '15 years of Japanese quality discipline',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-gray-600">
+                      <span className="mt-2 h-1.5 w-1.5 bg-primary-900 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+              <img
+                src="/quality/inspect%20reporter.jpg"
+                alt="Precision inspection report review"
+                className="h-full min-h-[360px] w-full object-cover"
+              />
             </div>
           </div>
         </div>
@@ -36,14 +54,13 @@ export default function Quality() {
       {/* Process Control */}
       <section className="py-24 bg-primary-50">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-display font-bold mb-12 text-primary-900">Process Control</h2>
+          <h2 className="text-3xl font-display font-bold mb-12 text-primary-900">Quality Process</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { title: 'Incoming Inspection', desc: 'Material grade, size, surface condition and certificates can be checked before production.' },
-                { title: 'Material Traceability', desc: 'Material traceability records are maintained according to customer and project requirements.' },
-                { title: 'In-Process Inspection', desc: 'Critical dimensions are inspected during machining to prevent batch defects.' },
-                { title: 'Final Inspection', desc: 'Finished parts are inspected before shipment based on drawing dimensions, tolerances, surface treatment and appearance requirements.' },
-                { title: 'Critical Dimension Control', desc: 'Key dimensions are identified before production. Inspection frequency is adjusted according to part risk and customer requirements.' },
+                { title: 'Drawing Review', desc: 'Critical tolerances, GD&T, and special requirements are reviewed before production.' },
+                { title: 'In-Process Inspection', desc: 'Critical dimensions are checked during machining to prevent deviation.' },
+                { title: 'Final Inspection', desc: 'Finished parts are inspected before shipment to ensure compliance.' },
+                { title: 'Inspection Report', desc: 'Measurement reports can be provided for customer verification.' },
               ].map((step, idx) => (
                 <div key={idx} className="bg-white p-8 border border-gray-200 shadow-sm">
                    <div className="h-8 text-primary-900 font-mono text-sm font-bold opacity-30 mb-2">0{idx+1}</div>
@@ -66,7 +83,7 @@ export default function Quality() {
                   {[
                     'CMM', 'TESA height gauge', 'Profile projector', 'Hardness tester',
                     'Gloss meter', 'Micrometers', 'Calipers', 'Pin gauges',
-                    'Thread gauges', 'Surface roughness tester', 'Other precision tools'
+                    'Thread gauges', 'Other precision tools'
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-gray-600 font-medium">
                       <div className="w-1.5 h-1.5 rounded-none bg-primary-900"></div>
