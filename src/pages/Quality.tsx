@@ -18,14 +18,13 @@ export default function Quality() {
         </div>
       </section>
 
-      {/* Quality Philosophy */}
+      {/* Quality Commitment */}
       <section className="py-24">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-display font-bold mb-6 text-primary-900">Quality Philosophy</h2>
+              <h2 className="text-3xl font-display font-bold mb-6 text-primary-900">Our Quality Commitment</h2>
               <div className="prose prose-lg text-gray-600 prose-p:leading-relaxed">
-                <h3 className="text-xl font-sans font-bold text-primary-900 mb-4">Our Quality Commitment</h3>
                 <ul className="space-y-3 list-none pl-0">
                   {[
                     '100% inspection on critical dimensions',
