@@ -5,7 +5,7 @@ const capabilitySteps = [
   {
     id: 'precision-machining',
     title: 'Precision Machining',
-    process: 'Process 01',
+    process: '01',
     intro: [
       'We specialize in custom precision machined parts for automation, semiconductor equipment, robotics, and industrial machinery.',
     ],
@@ -19,7 +19,7 @@ const capabilitySteps = [
   {
     id: 'tolerance-engineering',
     title: 'Tolerance & Engineering',
-    process: 'Process 02',
+    process: '02',
     intro: [
       'We understand that precision is more than just machining - it directly affects fit, assembly, and product performance.',
     ],
@@ -39,7 +39,7 @@ const capabilitySteps = [
   {
     id: 'one-stop-support',
     title: 'One-Stop Manufacturing Support',
-    process: 'Process 03',
+    process: '03',
     intro: [
       'Based in Shenzhen, we benefit from a strong manufacturing ecosystem and extensive supplier network.',
       'Beyond machining, we can coordinate additional processes including:',
@@ -62,7 +62,7 @@ const capabilitySteps = [
   {
     id: 'flexible-production',
     title: 'Flexible Production Support',
-    process: 'Process 04',
+    process: '04',
     intro: ['We support customers across different project stages:'],
     groups: [
       {
@@ -80,7 +80,7 @@ const capabilitySteps = [
   {
     id: 'materials',
     title: 'Materials We Machine',
-    process: 'Process 05',
+    process: '05',
     intro: [
       'We work with a wide range of engineering materials for precision machining applications.',
       'Material certificates and traceability documents can be provided.',
@@ -111,7 +111,7 @@ const capabilitySteps = [
   {
     id: 'heat-treatment-surface-finishing',
     title: 'Heat Treatment & Surface Finishing',
-    process: 'Process 06',
+    process: '06',
     intro: [
       'Heat treatment and surface finishing are coordinated through our trusted partner network in Shenzhen, ensuring consistent quality and fast turnaround.',
     ],

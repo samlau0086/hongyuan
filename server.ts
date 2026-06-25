@@ -317,7 +317,7 @@ function renderPublicFooter() {
           <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Contact Us</h3>
           <ul class="space-y-4">
             <li><a href="mailto:lynn.lee@hongyuan-precision.com" class="text-sm hover:text-white transition-colors">lynn.lee@hongyuan-precision.com</a></li>
-            <li class="text-sm">0086-755-23059684 (Tel)<br>+8618926541701 (Mob/WhatsApp)</li>
+            <li class="text-sm">0086-755-23059684 (Tel)</li>
             <li class="text-sm">Shajing, Bao'an District<br>Shenzhen City, China</li>
           </ul>
         </div>
