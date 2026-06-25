@@ -108,8 +108,8 @@ export default function Quality() {
 
             <div className="overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
               <img
-                src="/quality/1-CMM%20inspect%204.jpg"
-                alt="CMM inspection equipment"
+                src="/quality/inspection-equipment.png"
+                alt="Inspection equipment"
                 className="h-full min-h-[360px] w-full object-cover"
               />
             </div>
