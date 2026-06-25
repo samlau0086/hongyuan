@@ -67,7 +67,7 @@ export default function Quality() {
       <section className="py-24 bg-primary-50">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-display font-bold mb-12 text-primary-900">Quality Process</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 { title: 'Drawing Review', desc: 'Critical tolerances, GD&T, and special requirements are reviewed before production.' },
                 { title: 'In-Process Inspection', desc: 'Critical dimensions are checked during machining to prevent deviation.' },
