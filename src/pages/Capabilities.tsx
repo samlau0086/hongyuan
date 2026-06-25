@@ -89,7 +89,7 @@ const capabilitySteps = [
       {
         title: 'Metals',
         items: [
-          'Aluminum (2017, 6061, 6063, 5056, 5058, 7075)',
+          'Aluminum (2017, 6061, 6063, 5056, 7075)',
           'Carbon Steel',
           'Stainless Steel',
           'Brass',
@@ -151,7 +151,7 @@ export default function Capabilities() {
                 <h2 className="text-3xl font-display font-bold text-primary-900">{step.title}</h2>
                 <span className="text-sm font-sans font-medium text-gray-400 uppercase tracking-widest hidden sm:block">{step.process}</span>
               </div>
-              <div className={`grid gap-8 ${step.groups.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+              <div className={`grid gap-8 ${step.groups.length >= 3 ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
                 <div>
                   {step.intro.map((paragraph) => (
                     <p key={paragraph} className="text-sm text-gray-600 leading-relaxed mb-4 last:mb-0">
