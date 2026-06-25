@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { BlogSummary, useBlogInitialData } from '../blogInitialData';
+import { Locale, useLocale, useSiteCopy } from '../i18n';
 
 type BlogArticle = {
   title: string;
@@ -13,9 +14,11 @@ type BlogArticle = {
 };
 
 export default function Blog() {
+  const { locale, localizedPath } = useLocale();
+  const copy = useSiteCopy();
   const initialBlogData = useBlogInitialData();
   const [currentPage, setCurrentPage] = useState(1);
-  const [articles, setArticles] = useState<BlogArticle[]>(formatBlogArticles(initialBlogData.posts || []));
+  const [articles, setArticles] = useState<BlogArticle[]>(formatBlogArticles(initialBlogData.posts || [], locale));
   const [loading, setLoading] = useState(!initialBlogData.posts);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const itemsPerPage = 18;
@@ -24,13 +27,13 @@ export default function Blog() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('/api/blog/posts');
+        const response = await fetch(`/api/blog/posts?lang=${locale}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        setArticles(formatBlogArticles(data));
+        setArticles(formatBlogArticles(data, locale));
       } catch (error: any) {
         setFetchError(error.message || 'Failed to load blog posts.');
         setArticles([]);
@@ -40,7 +43,7 @@ export default function Blog() {
     };
 
     fetchPosts();
-  }, []);
+  }, [locale]);
 
   const totalPages = Math.ceil(articles.length / itemsPerPage) || 1;
   const currentArticles = articles.slice(
@@ -51,15 +54,15 @@ export default function Blog() {
   return (
     <div className="bg-white">
       <SEO
-        title="Technical Blog"
-        description="Insights on precision machining, quality control, and engineering best practices. Learn about position tolerance, grinding stability, and drawing interpretation."
+        title={copy.blog.title}
+        description={copy.blog.description}
         keywords="Precision Machining Blog, Tolerance Control, Grinding, Drawing Interpretation"
       />
 
       <section className="bg-primary-900 border-b border-gray-200 py-16">
         <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-display font-bold text-white mb-4">Technical Blog</h1>
-          <p className="text-xl text-gray-400 max-w-2xl">Insights on precision machining, quality control, and engineering best practices.</p>
+          <h1 className="text-4xl font-display font-bold text-white mb-4">{copy.blog.title}</h1>
+          <p className="text-xl text-gray-400 max-w-2xl">{copy.blog.description}</p>
         </div>
       </section>
 
@@ -80,13 +83,13 @@ export default function Blog() {
             <>
               {fetchError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6 text-sm">
-                  <strong>Blog Load Issue:</strong> {fetchError}
+                  <strong>{copy.blog.loadIssue}</strong> {fetchError}
                 </div>
               )}
 
               {!currentArticles.length && !fetchError && (
                 <div className="bg-white border border-gray-200 p-12 text-center text-slate-600">
-                  No blog posts have been published yet.
+                  {copy.blog.empty}
                 </div>
               )}
 
@@ -95,7 +98,7 @@ export default function Blog() {
                   <article
                     key={article.slug}
                     className="group cursor-pointer"
-                    onClick={() => navigate(`/blog/${article.slug}`)}
+                    onClick={() => navigate(localizedPath(`/blog/${article.slug}`))}
                   >
                     <div className="rounded-lg overflow-hidden mb-4 border border-gray-200 bg-white">
                       <img src={article.img} alt={article.title} className="w-full h-32 md:h-40 object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -151,10 +154,10 @@ export default function Blog() {
   );
 }
 
-function formatBlogArticles(posts: BlogSummary[]): BlogArticle[] {
+function formatBlogArticles(posts: BlogSummary[], locale: Locale): BlogArticle[] {
   return posts.map((post) => ({
     title: post.title,
-    date: new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    date: new Date(post.date).toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'ja' ? 'ja-JP' : 'zh-CN', { month: 'short', day: '2-digit', year: 'numeric' }),
     img: post.img || '/home-banner.jpg',
     slug: post.slug,
     excerpt: post.excerpt,

@@ -191,39 +191,306 @@ function getBlogExcerpt(markdown: string, explicitExcerpt = "") {
     .slice(0, 180);
 }
 
-function getPublishedBlogPosts() {
+type Locale = "en" | "ja" | "zh";
+type BlogTranslation = {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  status?: string;
+};
+
+const locales: Locale[] = ["en", "ja", "zh"];
+
+function normalizeLocale(value: unknown): Locale {
+  return locales.includes(value as Locale) ? (value as Locale) : "en";
+}
+
+function localizedPath(pathname: string, locale: Locale) {
+  const normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (locale === "en") return normalized === "/" ? "/en" : `/en${normalized}`;
+  return normalized === "/" ? `/${locale}` : `/${locale}${normalized}`;
+}
+
+function getBlogTranslation(post: any, locale: Locale): BlogTranslation | null {
+  const translation = post.translations?.[locale];
+  if (translation?.title && translation?.slug) {
+    return translation;
+  }
+
+  if (locale === "en" && post.title && post.slug) {
+    return {
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      content: post.content,
+      status: post.status || "published",
+    };
+  }
+
+  return null;
+}
+
+function getAdminBlogTranslation(post: any, locale: Locale): BlogTranslation {
+  return getBlogTranslation(post, locale) || {};
+}
+
+function getPublishedBlogPosts(locale: Locale = "en") {
   return readBlogPosts()
-    .filter((post) => post.status !== "draft" && post.title && post.slug)
+    .filter((post) => {
+      const translation = getBlogTranslation(post, locale);
+      return translation?.title && translation?.slug && translation.status !== "draft";
+    })
     .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 }
 
-function formatPublicDate(value: string, style: "short" | "long" = "short") {
+function formatPublicDate(value: string, style: "short" | "long" = "short", locale: Locale = "en") {
   const date = new Date(value || "");
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale === "en" ? "en-US" : locale === "ja" ? "ja-JP" : "zh-CN", {
     month: style === "long" ? "long" : "short",
     day: style === "long" ? "numeric" : "2-digit",
     year: "numeric",
   });
 }
 
-function getPublicBlogSummary(post: any) {
+function getPublicBlogSummary(post: any, locale: Locale = "en") {
+  const translation = getBlogTranslation(post, locale) || {};
   return {
     id: post.id,
-    title: post.title,
-    slug: post.slug,
+    title: translation.title || "",
+    slug: translation.slug || "",
     date: post.date,
-    excerpt: post.excerpt,
+    excerpt: translation.excerpt || "",
     img: post.coverImage || "",
   };
 }
 
-function getPublicBlogPost(post: any) {
+function getPublicBlogPost(post: any, locale: Locale = "en") {
+  const translation = getBlogTranslation(post, locale) || {};
   return {
-    ...getPublicBlogSummary(post),
-    content: post.content || "",
-    contentHtml: markdownToHtml(post.content || ""),
+    ...getPublicBlogSummary(post, locale),
+    content: translation.content || "",
+    contentHtml: markdownToHtml(translation.content || ""),
   };
+}
+
+function findPublishedBlogPostBySlug(slug: string, locale: Locale = "en") {
+  return getPublishedBlogPosts(locale).find((post) => getBlogTranslation(post, locale)?.slug === slug);
+}
+
+function ensureUniqueLocaleSlug(posts: any[], locale: Locale, baseSlug: string, currentId = "") {
+  let slug = baseSlug;
+  let count = 2;
+  while (
+    posts.some((post) => {
+      if (post.id === currentId) return false;
+      return getBlogTranslation(post, locale)?.slug === slug;
+    })
+  ) {
+    slug = `${baseSlug}-${count++}`;
+  }
+  return slug;
+}
+
+function buildBlogTranslations(fields: Record<string, string>, posts: any[], currentId = "") {
+  const enTitle = fields.title?.trim();
+  const enContent = fields.content?.trim();
+  const enSlug = ensureUniqueLocaleSlug(posts, "en", slugify(fields.slug || enTitle), currentId);
+  const translations: Record<Locale, BlogTranslation> = {
+    en: {
+      title: enTitle,
+      slug: enSlug,
+      excerpt: getBlogExcerpt(enContent, fields.excerpt),
+      content: fields.content,
+      status: fields.status || "published",
+    },
+    ja: {},
+    zh: {},
+  };
+
+  for (const locale of ["ja", "zh"] as Locale[]) {
+    const title = fields[`${locale}Title`]?.trim();
+    const content = fields[`${locale}Content`]?.trim();
+    const existingSlug = fields[`${locale}Slug`]?.trim();
+    if (!title && !content && !existingSlug) continue;
+    const slug = ensureUniqueLocaleSlug(posts, locale, slugify(existingSlug || enSlug), currentId);
+    translations[locale] = {
+      title,
+      slug,
+      excerpt: getBlogExcerpt(content, fields[`${locale}Excerpt`]),
+      content: fields[`${locale}Content`] || "",
+      status: fields[`${locale}Status`] === "published" ? "published" : "draft",
+    };
+  }
+
+  return { translations, enSlug };
+}
+
+function extractResponsesText(data: any) {
+  if (typeof data.output_text === "string") return data.output_text;
+  const parts: string[] = [];
+  for (const item of data.output || []) {
+    for (const content of item.content || []) {
+      if (typeof content.text === "string") parts.push(content.text);
+    }
+  }
+  return parts.join("\n");
+}
+
+function extractChatCompletionText(data: any) {
+  return String(data.choices?.[0]?.message?.content || "");
+}
+
+function stripJsonCodeFence(value: string) {
+  return value
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+}
+
+function parseTranslationJson(text: string) {
+  try {
+    return JSON.parse(stripJsonCodeFence(text));
+  } catch {
+    throw new Error("AI translation response was not valid JSON.");
+  }
+}
+
+function getJsonTranslationSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["ja", "zh"],
+    properties: {
+      ja: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "excerpt", "content"],
+        properties: {
+          title: { type: "string" },
+          excerpt: { type: "string" },
+          content: { type: "string" },
+        },
+      },
+      zh: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "excerpt", "content"],
+        properties: {
+          title: { type: "string" },
+          excerpt: { type: "string" },
+          content: { type: "string" },
+        },
+      },
+    },
+  };
+}
+
+function getTranslationProviderConfig() {
+  const provider = (process.env.AI_TRANSLATION_PROVIDER || "").trim() || (process.env.AI_TRANSLATION_BASE_URL || process.env.AI_TRANSLATION_ENDPOINT ? "openai-compatible" : "openai-responses");
+  const apiKey = process.env.AI_TRANSLATION_API_KEY || process.env.OPENAI_API_KEY || "";
+  const model = process.env.AI_TRANSLATION_MODEL || process.env.OPENAI_TRANSLATION_MODEL || "";
+  const baseUrl = (process.env.AI_TRANSLATION_BASE_URL || "").replace(/\/+$/, "");
+  const endpoint = process.env.AI_TRANSLATION_ENDPOINT || "";
+  const includeResponseFormat = process.env.AI_TRANSLATION_RESPONSE_FORMAT !== "false";
+
+  if (!apiKey) throw new Error("AI_TRANSLATION_API_KEY is required to generate translations.");
+  if (!model) throw new Error("AI_TRANSLATION_MODEL is required to generate translations.");
+
+  return { provider, apiKey, model, baseUrl, endpoint, includeResponseFormat };
+}
+
+async function generateBlogTranslationDrafts(post: any) {
+  const en = getAdminBlogTranslation(post, "en");
+  if (!en.title || !en.content) throw new Error("English title and content are required before generating translations.");
+
+  const config = getTranslationProviderConfig();
+  const systemPrompt =
+    "Translate precision manufacturing blog content from English into Japanese and Simplified Chinese. Preserve Markdown structure, technical terms, numbers, units, and links. Return only valid JSON with keys ja and zh. Each language must include title, excerpt, and content.";
+  const userPayload = JSON.stringify({
+    source: {
+      title: en.title,
+      slug: en.slug,
+      excerpt: en.excerpt || "",
+      content: en.content,
+    },
+    output_schema: {
+      ja: { title: "string", excerpt: "string", content: "markdown string" },
+      zh: { title: "string", excerpt: "string", content: "markdown string" },
+    },
+  });
+
+  if (config.provider === "openai-responses") {
+    const response = await fetch(config.endpoint || "https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        input: [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          {
+            role: "user",
+            content: userPayload,
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "blog_translations",
+            schema: getJsonTranslationSchema(),
+          },
+        },
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error?.message || `AI translation failed with status ${response.status}.`);
+    }
+
+    return parseTranslationJson(extractResponsesText(data));
+  }
+
+  if (config.provider !== "openai-compatible") {
+    throw new Error(`Unsupported AI_TRANSLATION_PROVIDER: ${config.provider}. Use "openai-responses" or "openai-compatible".`);
+  }
+
+  const chatEndpoint = config.endpoint || `${config.baseUrl || "https://api.openai.com/v1"}/chat/completions`;
+  const body: any = {
+    model: config.model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPayload },
+    ],
+    temperature: 0.2,
+  };
+  if (config.includeResponseFormat) {
+    body.response_format = { type: "json_object" };
+  }
+
+  const response = await fetch(chatEndpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error?.message || `AI translation failed with status ${response.status}.`);
+  }
+
+  return parseTranslationJson(extractChatCompletionText(data));
 }
 
 function serializePublicData(data: unknown) {
@@ -240,21 +507,70 @@ function getBuiltAssetTags(distPath: string) {
   ).join("\n");
 }
 
-function renderPublicHeader(active = "") {
+const publicCopy = {
+  en: {
+    nav: ["Home", "About Us", "Capabilities", "Quality", "Blog", "Contact Us"],
+    cta: "UPLOAD DRAWINGS & RFQ",
+    blogTitle: "Technical Blog",
+    blogDescription: "Insights on precision machining, quality control, and engineering best practices.",
+    empty: "No blog posts have been published yet.",
+    notFound: "Post Not Found",
+    notFoundBody: "The article you're looking for doesn't exist or has been removed.",
+    back: "Back to Blog",
+    footer: "Precision Machining with Japanese Quality Discipline. We help engineers reduce sourcing complexity and control machining quality from prototype to batch production.",
+    quickLinks: "Quick Links",
+    quality: "Quality Control",
+    technicalBlog: "Technical Blog",
+    contact: "Contact Us",
+  },
+  ja: {
+    nav: ["ホーム", "会社概要", "加工能力", "品質管理", "ブログ", "お問い合わせ"],
+    cta: "図面アップロード・見積依頼",
+    blogTitle: "技術ブログ",
+    blogDescription: "精密加工、品質管理、エンジニアリングの実務に関する情報を発信します。",
+    empty: "公開済みの記事はまだありません。",
+    notFound: "記事が見つかりません",
+    notFoundBody: "お探しの記事は存在しないか、削除されています。",
+    back: "ブログへ戻る",
+    footer: "日本品質の管理思想と深センの製造スピードで、試作から量産まで調達負担を減らし、加工品質を安定させます。",
+    quickLinks: "クイックリンク",
+    quality: "品質管理",
+    technicalBlog: "技術ブログ",
+    contact: "お問い合わせ",
+  },
+  zh: {
+    nav: ["首页", "关于我们", "加工能力", "品质管理", "博客", "联系我们"],
+    cta: "上传图纸并询价",
+    blogTitle: "技术博客",
+    blogDescription: "关于精密加工、品质控制和工程实践的经验分享。",
+    empty: "目前还没有已发布的博客文章。",
+    notFound: "文章未找到",
+    notFoundBody: "您查找的文章不存在或已被移除。",
+    back: "返回博客",
+    footer: "以日本品质管理标准结合深圳制造速度，帮助工程团队降低采购复杂度，从样件到批量生产稳定控制加工品质。",
+    quickLinks: "快速链接",
+    quality: "品质管理",
+    technicalBlog: "技术博客",
+    contact: "联系我们",
+  },
+};
+
+function renderPublicHeader(active = "", locale: Locale = "en") {
+  const copy = publicCopy[locale];
   const nav = [
-    { href: "/", label: "Home", id: "home" },
-    { href: "/about", label: "About Us", id: "about" },
-    { href: "/capabilities", label: "Capabilities", id: "capabilities" },
-    { href: "/quality", label: "Quality", id: "quality" },
-    { href: "/blog", label: "Blog", id: "blog" },
-    { href: "/contact", label: "Contact Us", id: "contact" },
+    { href: localizedPath("/", locale), label: copy.nav[0], id: "home" },
+    { href: localizedPath("/about", locale), label: copy.nav[1], id: "about" },
+    { href: localizedPath("/capabilities", locale), label: copy.nav[2], id: "capabilities" },
+    { href: localizedPath("/quality", locale), label: copy.nav[3], id: "quality" },
+    { href: localizedPath("/blog", locale), label: copy.nav[4], id: "blog" },
+    { href: localizedPath("/contact", locale), label: copy.nav[5], id: "contact" },
   ];
 
   return `<header class="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
     <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
       <div class="flex bg-transparent h-20 items-center justify-between">
         <div class="flex-shrink-0 flex items-center gap-2">
-          <a class="flex items-center gap-2" href="/">
+          <a class="flex items-center gap-2" href="${localizedPath("/", locale)}">
             <span class="font-extrabold italic text-blue-700 text-[28px] tracking-tighter pr-1">HY</span>
             <div class="flex flex-col justify-center border-l-2 border-slate-200 pl-3 leading-none">
               <span class="font-black text-[22px] text-slate-900 tracking-wide mb-1">HONGYUAN</span>
@@ -273,34 +589,35 @@ function renderPublicHeader(active = "") {
             .join("")}
         </nav>
         <div class="hidden md:block">
-          <a class="bg-blue-700 text-white px-4 lg:px-6 py-2.5 text-xs lg:text-sm font-semibold rounded-sm shadow-sm hover:bg-blue-800 transition-colors whitespace-nowrap" href="/contact">UPLOAD DRAWINGS &amp; RFQ</a>
+          <a class="bg-blue-700 text-white px-4 lg:px-6 py-2.5 text-xs lg:text-sm font-semibold rounded-sm shadow-sm hover:bg-blue-800 transition-colors whitespace-nowrap" href="${localizedPath("/contact", locale)}">${escapeHtml(copy.cta)}</a>
         </div>
       </div>
     </div>
   </header>`;
 }
 
-function renderPublicFooter() {
+function renderPublicFooter(locale: Locale = "en") {
+  const copy = publicCopy[locale];
   return `<footer class="bg-slate-900 text-slate-300">
     <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 py-16">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         <div class="space-y-6">
-          <a class="flex items-center gap-2" href="/">
+          <a class="flex items-center gap-2" href="${localizedPath("/", locale)}">
             <span class="font-extrabold italic text-blue-500 text-[28px] tracking-tighter pr-1">HY</span>
             <div class="flex flex-col justify-center border-l-2 border-slate-700 pl-3 leading-none">
               <span class="font-black text-[22px] text-white tracking-wide mb-1">HONGYUAN</span>
               <span class="font-bold text-[10px] text-slate-400 tracking-[0.25em]">PRECISION</span>
             </div>
           </a>
-          <p class="text-sm leading-relaxed text-slate-400">Precision Machining with Japanese Quality Discipline. We help engineers reduce sourcing complexity and control machining quality from prototype to batch production.</p>
+          <p class="text-sm leading-relaxed text-slate-400">${escapeHtml(copy.footer)}</p>
         </div>
         <div>
-          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Quick Links</h3>
+          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">${escapeHtml(copy.quickLinks)}</h3>
           <ul class="space-y-4">
-            <li><a class="text-sm hover:text-white transition-colors" href="/about">About Us</a></li>
-            <li><a class="text-sm hover:text-white transition-colors" href="/capabilities">Capabilities</a></li>
-            <li><a class="text-sm hover:text-white transition-colors" href="/quality">Quality Control</a></li>
-            <li><a class="text-sm hover:text-white transition-colors" href="/blog">Technical Blog</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="${localizedPath("/about", locale)}">${escapeHtml(copy.nav[1])}</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="${localizedPath("/capabilities", locale)}">${escapeHtml(copy.nav[2])}</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="${localizedPath("/quality", locale)}">${escapeHtml(copy.quality)}</a></li>
+            <li><a class="text-sm hover:text-white transition-colors" href="${localizedPath("/blog", locale)}">${escapeHtml(copy.technicalBlog)}</a></li>
           </ul>
         </div>
         <div>
@@ -314,7 +631,7 @@ function renderPublicFooter() {
           </ul>
         </div>
         <div>
-          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">Contact Us</h3>
+          <h3 class="text-white font-sans font-bold tracking-wider uppercase mb-6 text-sm">${escapeHtml(copy.contact)}</h3>
           <ul class="space-y-4">
             <li><a href="mailto:lynn.lee@hongyuan-precision.com" class="text-sm hover:text-white transition-colors">lynn.lee@hongyuan-precision.com</a></li>
             <li class="text-sm">0086-755-23059684 (Tel)</li>
@@ -332,6 +649,7 @@ function renderPublicShell({
   description,
   body,
   blogInitialData,
+  locale = "en",
   status = 200,
 }: {
   distPath: string;
@@ -339,12 +657,13 @@ function renderPublicShell({
   description: string;
   body: string;
   blogInitialData: unknown;
+  locale?: Locale;
   status?: number;
 }) {
   return {
     status,
     html: `<!doctype html>
-      <html lang="en">
+      <html lang="${locale}">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -364,32 +683,33 @@ function renderPublicShell({
   };
 }
 
-function renderDynamicBlogIndex(distPath: string) {
-  const posts = getPublishedBlogPosts();
-  const summaries = posts.map(getPublicBlogSummary);
+function renderDynamicBlogIndex(distPath: string, locale: Locale = "en") {
+  const copy = publicCopy[locale];
+  const posts = getPublishedBlogPosts(locale);
+  const summaries = posts.map((post) => getPublicBlogSummary(post, locale));
   const cards = summaries.length
     ? summaries
         .map(
-          (post) => `<a class="group block" href="/blog/${escapeHtml(post.slug)}">
+          (post) => `<a class="group block" href="${localizedPath(`/blog/${post.slug}`, locale)}">
             <div class="rounded-lg overflow-hidden mb-4 border border-gray-200 bg-white">
               <img src="${escapeHtml(post.img || "/home-banner.jpg")}" alt="${escapeHtml(post.title)}" class="w-full h-32 md:h-40 object-cover group-hover:scale-105 transition-transform duration-500">
             </div>
             <h2 class="text-[15px] font-bold text-slate-900 leading-snug mb-2 group-hover:text-blue-700 transition-colors line-clamp-3">${escapeHtml(post.title)}</h2>
-            <div class="text-xs text-slate-500">${escapeHtml(formatPublicDate(post.date))}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(formatPublicDate(post.date, "short", locale))}</div>
             ${post.excerpt ? `<p class="mt-3 text-xs text-slate-600 leading-relaxed">${escapeHtml(post.excerpt)}</p>` : ""}
           </a>`
         )
         .join("")
-    : '<div class="bg-white border border-gray-200 p-12 text-center text-slate-600">No blog posts have been published yet.</div>';
+    : `<div class="bg-white border border-gray-200 p-12 text-center text-slate-600">${escapeHtml(copy.empty)}</div>`;
 
   const body = `<div class="min-h-screen flex flex-col bg-primary-50">
-    ${renderPublicHeader("blog")}
+    ${renderPublicHeader("blog", locale)}
     <main class="flex-grow flex flex-col">
       <div class="bg-white">
         <section class="bg-primary-900 border-b border-gray-200 py-16">
           <div class="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8">
-            <h1 class="text-4xl font-display font-bold text-white mb-4">Technical Blog</h1>
-            <p class="text-xl text-gray-400 max-w-2xl">Insights on precision machining, quality control, and engineering best practices.</p>
+            <h1 class="text-4xl font-display font-bold text-white mb-4">${escapeHtml(copy.blogTitle)}</h1>
+            <p class="text-xl text-gray-400 max-w-2xl">${escapeHtml(copy.blogDescription)}</p>
           </div>
         </section>
         <section class="py-24 bg-slate-50 min-h-[600px]">
@@ -399,34 +719,36 @@ function renderDynamicBlogIndex(distPath: string) {
         </section>
       </div>
     </main>
-    ${renderPublicFooter()}
+    ${renderPublicFooter(locale)}
   </div>`;
 
   return renderPublicShell({
     distPath,
-    title: "Technical Blog | Precision Machining Solutions",
-    description: "Insights on precision machining, quality control, and engineering best practices.",
+    title: `${copy.blogTitle} | Precision Machining Solutions`,
+    description: copy.blogDescription,
     body,
     blogInitialData: { posts: summaries },
+    locale,
   });
 }
 
-function renderDynamicBlogPost(distPath: string, slug: string) {
-  const posts = getPublishedBlogPosts();
-  const post = posts.find((item) => item.slug === slug);
-  const summaries = posts.map(getPublicBlogSummary);
+function renderDynamicBlogPost(distPath: string, slug: string, locale: Locale = "en") {
+  const copy = publicCopy[locale];
+  const posts = getPublishedBlogPosts(locale);
+  const post = findPublishedBlogPostBySlug(slug, locale);
+  const summaries = posts.map((item) => getPublicBlogSummary(item, locale));
 
   if (!post) {
     const body = `<div class="min-h-screen flex flex-col bg-primary-50">
-      ${renderPublicHeader("blog")}
+      ${renderPublicHeader("blog", locale)}
       <main class="flex-grow flex flex-col">
         <div class="pt-24 pb-16 min-h-[60vh] flex flex-col items-center justify-center text-center px-4 bg-white">
-          <h1 class="text-3xl font-bold text-slate-900 mb-4">Post Not Found</h1>
-          <p class="text-slate-600 mb-8">The article you're looking for doesn't exist or has been removed.</p>
-          <a href="/blog" class="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">Back to Blog</a>
+          <h1 class="text-3xl font-bold text-slate-900 mb-4">${escapeHtml(copy.notFound)}</h1>
+          <p class="text-slate-600 mb-8">${escapeHtml(copy.notFoundBody)}</p>
+          <a href="${localizedPath("/blog", locale)}" class="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">${escapeHtml(copy.back)}</a>
         </div>
       </main>
-      ${renderPublicFooter()}
+      ${renderPublicFooter(locale)}
     </div>`;
     return renderPublicShell({
       distPath,
@@ -434,18 +756,19 @@ function renderDynamicBlogPost(distPath: string, slug: string) {
       description: "The requested blog post was not found.",
       body,
       blogInitialData: { posts: summaries, post: null },
+      locale,
       status: 404,
     });
   }
 
-  const publicPost = getPublicBlogPost(post);
-  const description = post.excerpt || "Read about precision manufacturing, CNC machining and insights.";
+  const publicPost = getPublicBlogPost(post, locale);
+  const description = publicPost.excerpt || "Read about precision manufacturing, CNC machining and insights.";
   const body = `<div class="min-h-screen flex flex-col bg-primary-50">
-    ${renderPublicHeader("blog")}
+    ${renderPublicHeader("blog", locale)}
     <main class="flex-grow flex flex-col">
       <div class="pt-24 pb-24 bg-white">
         <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <a href="/blog" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 mb-8 transition-colors">Back to Blog</a>
+          <a href="${localizedPath("/blog", locale)}" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 mb-8 transition-colors">${escapeHtml(copy.back)}</a>
           ${
             publicPost.img
               ? `<img src="${escapeHtml(publicPost.img)}" alt="${escapeHtml(publicPost.title)}" class="w-full h-auto max-h-[500px] object-cover rounded-xl mb-10">`
@@ -454,7 +777,7 @@ function renderDynamicBlogPost(distPath: string, slug: string) {
           <header class="mb-10">
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight mb-6">${escapeHtml(publicPost.title)}</h1>
             <div class="flex items-center gap-4 text-slate-500 text-sm">
-              <time datetime="${escapeHtml(publicPost.date)}">${escapeHtml(formatPublicDate(publicPost.date, "long"))}</time>
+              <time datetime="${escapeHtml(publicPost.date)}">${escapeHtml(formatPublicDate(publicPost.date, "long", locale))}</time>
             </div>
           </header>
           <div class="prose prose-lg prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-a:text-blue-700 hover:prose-a:text-blue-800 prose-img:rounded-xl">
@@ -463,15 +786,16 @@ function renderDynamicBlogPost(distPath: string, slug: string) {
         </article>
       </div>
     </main>
-    ${renderPublicFooter()}
+    ${renderPublicFooter(locale)}
   </div>`;
 
   return renderPublicShell({
     distPath,
-    title: `${post.title} - Hongyuan Precision | Precision Machining Solutions`,
+    title: `${publicPost.title} - Hongyuan Precision | Precision Machining Solutions`,
     description,
     body,
     blogInitialData: { posts: summaries, post: publicPost },
+    locale,
   });
 }
 
@@ -683,15 +1007,35 @@ function renderAdminLayout(title: string, active: string, body: string) {
 }
 
 function renderBlogForm(post: any = {}, action = "/admin/blog/new") {
+  const en = getAdminBlogTranslation(post, "en");
+  const ja = getAdminBlogTranslation(post, "ja");
+  const zh = getAdminBlogTranslation(post, "zh");
+  const error = post.formError ? `<div class="empty" style="border-color:#fecaca;background:#fef2f2;color:#991b1b">${escapeHtml(post.formError)}</div>` : "";
+  const translateAction = post.id
+      ? `<form method="post" action="/admin/blog/${escapeHtml(post.id)}/translate" style="margin:0 0 16px 0">
+        <button class="button secondary" type="submit">Generate JA/ZH Drafts</button>
+        <span class="help">Uses the configured AI translation provider. Generated translations are saved as drafts.</span>
+      </form>`
+    : "";
   return `<form class="card form-grid" method="post" action="${action}" enctype="multipart/form-data">
+    ${error}
+    ${translateAction}
+    <h3 style="margin:0;color:#0f172a">English Source</h3>
     <div>
       <label for="title">Title</label>
-      <input id="title" name="title" value="${escapeHtml(post.title || "")}" required>
+      <input id="title" name="title" value="${escapeHtml(en.title || post.title || "")}" required>
     </div>
     <div>
       <label for="slug">Slug</label>
-      <input id="slug" name="slug" value="${escapeHtml(post.slug || "")}" placeholder="auto-generated-from-title">
+      <input id="slug" name="slug" value="${escapeHtml(en.slug || post.slug || "")}" placeholder="auto-generated-from-title">
       <div class="help">Lowercase URL path, for example: cnc-machining-tolerance-control</div>
+    </div>
+    <div>
+      <label for="status">English Status</label>
+      <select id="status" name="status">
+        <option value="published" ${(en.status || post.status || "published") !== "draft" ? "selected" : ""}>Published</option>
+        <option value="draft" ${(en.status || post.status) === "draft" ? "selected" : ""}>Draft</option>
+      </select>
     </div>
     <div>
       <label for="date">Date</label>
@@ -699,7 +1043,7 @@ function renderBlogForm(post: any = {}, action = "/admin/blog/new") {
     </div>
     <div>
       <label for="excerpt">Excerpt</label>
-      <textarea id="excerpt" name="excerpt" style="min-height:90px;font-family:Arial,sans-serif">${escapeHtml(post.excerpt || "")}</textarea>
+      <textarea id="excerpt" name="excerpt" style="min-height:90px;font-family:Arial,sans-serif">${escapeHtml(en.excerpt || post.excerpt || "")}</textarea>
     </div>
     <div>
       <label for="cover">Cover Image</label>
@@ -708,14 +1052,47 @@ function renderBlogForm(post: any = {}, action = "/admin/blog/new") {
     </div>
     <div>
       <label for="content">Markdown Content</label>
-      <textarea id="content" name="content" required>${escapeHtml(post.content || "")}</textarea>
+      <textarea id="content" name="content" required>${escapeHtml(en.content || post.content || "")}</textarea>
       <div class="help">Supports headings (#), bullet lists, **bold**, *italic*, links, and paragraphs.</div>
     </div>
+    ${renderTranslationFields("ja", "Japanese", ja)}
+    ${renderTranslationFields("zh", "Chinese", zh)}
     <div class="actions">
       <button class="button" type="submit">Save Post</button>
       <a class="button secondary" href="/admin/blog">Cancel</a>
     </div>
   </form>`;
+}
+
+function renderTranslationFields(locale: Locale, label: string, translation: BlogTranslation) {
+  return `<fieldset style="border:1px solid #dbe3ef;padding:16px;margin:8px 0">
+    <legend style="padding:0 8px;font-weight:700;color:#0f172a">${label} Translation</legend>
+    <div class="form-grid" style="box-shadow:none;border:0;padding:0">
+      <div>
+        <label for="${locale}Title">Title</label>
+        <input id="${locale}Title" name="${locale}Title" value="${escapeHtml(translation.title || "")}">
+      </div>
+      <div>
+        <label for="${locale}Slug">Slug</label>
+        <input id="${locale}Slug" name="${locale}Slug" value="${escapeHtml(translation.slug || "")}" placeholder="can reuse English slug">
+      </div>
+      <div>
+        <label for="${locale}Status">Status</label>
+        <select id="${locale}Status" name="${locale}Status">
+          <option value="draft" ${translation.status !== "published" ? "selected" : ""}>Draft</option>
+          <option value="published" ${translation.status === "published" ? "selected" : ""}>Published</option>
+        </select>
+      </div>
+      <div>
+        <label for="${locale}Excerpt">Excerpt</label>
+        <textarea id="${locale}Excerpt" name="${locale}Excerpt" style="min-height:90px;font-family:Arial,sans-serif">${escapeHtml(translation.excerpt || "")}</textarea>
+      </div>
+      <div>
+        <label for="${locale}Content">Markdown Content</label>
+        <textarea id="${locale}Content" name="${locale}Content">${escapeHtml(translation.content || "")}</textarea>
+      </div>
+    </div>
+  </fieldset>`;
 }
 
 function collectRequestBody(req: any, maxBytes: number): Promise<Buffer> {
@@ -787,39 +1164,19 @@ async function startServer() {
   app.use(express.urlencoded({ extended: false }));
 
   app.get("/api/blog/posts", (req, res) => {
-    const posts = readBlogPosts()
-      .filter((post) => post.status !== "draft")
-      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
-
-    res.json(
-      posts.map((post) => ({
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        date: post.date,
-        excerpt: post.excerpt,
-        img: post.coverImage || "",
-      }))
-    );
+    const locale = normalizeLocale(req.query.lang);
+    res.json(getPublishedBlogPosts(locale).map((post) => getPublicBlogSummary(post, locale)));
   });
 
   app.get("/api/blog/posts/:slug", (req, res) => {
-    const post = readBlogPosts().find((item) => item.slug === req.params.slug && item.status !== "draft");
+    const locale = normalizeLocale(req.query.lang);
+    const post = findPublishedBlogPostBySlug(req.params.slug, locale);
     if (!post) {
       res.status(404).json({ error: "Post not found" });
       return;
     }
 
-    res.json({
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      date: post.date,
-      excerpt: post.excerpt,
-      img: post.coverImage || "",
-      content: post.content,
-      contentHtml: markdownToHtml(post.content),
-    });
+    res.json(getPublicBlogPost(post, locale));
   });
 
   app.get("/blog-uploads/:file", (req, res) => {
@@ -968,18 +1325,23 @@ async function startServer() {
     const posts = readBlogPosts().sort((a, b) => String(b.updatedAt || b.date || "").localeCompare(String(a.updatedAt || a.date || "")));
     const rows = posts
       .map(
-        (post) => `<tr>
+        (post) => {
+          const en = getAdminBlogTranslation(post, "en");
+          const ja = getAdminBlogTranslation(post, "ja");
+          const zh = getAdminBlogTranslation(post, "zh");
+          return `<tr>
           <td>${post.coverImage ? `<img src="${escapeHtml(post.coverImage)}" alt="" style="width:88px;height:56px;object-fit:cover">` : ""}</td>
-          <td><strong>${escapeHtml(post.title)}</strong><br><span>/blog/${escapeHtml(post.slug)}</span></td>
+          <td><strong>${escapeHtml(en.title || post.title || "")}</strong><br><span>/blog/${escapeHtml(en.slug || post.slug || "")}</span></td>
           <td>${escapeHtml(post.date)}</td>
-          <td>${escapeHtml(post.status || "published")}</td>
+          <td>EN: ${escapeHtml(en.status || post.status || "published")}<br>JA: ${escapeHtml(ja.status || "missing")}<br>ZH: ${escapeHtml(zh.status || "missing")}</td>
           <td class="actions">
             <a class="button secondary" href="/admin/blog/${post.id}/edit">Edit</a>
             <form method="post" action="/admin/blog/${post.id}/delete" onsubmit="return confirm('Delete this post?')" style="margin:0">
               <button class="button danger" type="submit">Delete</button>
             </form>
           </td>
-        </tr>`
+        </tr>`;
+        }
       )
       .join("");
 
@@ -1021,12 +1383,7 @@ async function startServer() {
       }
 
       const posts = readBlogPosts();
-      const baseSlug = slugify(fields.slug || title);
-      let slug = baseSlug;
-      let count = 2;
-      while (posts.some((post) => post.slug === slug)) {
-        slug = `${baseSlug}-${count++}`;
-      }
+      const { translations, enSlug } = buildBlogTranslations(fields, posts);
 
       const coverFile = files.find((file) => file.fieldName === "cover" && file.buffer.length > 0);
       let coverImage = "";
@@ -1040,12 +1397,13 @@ async function startServer() {
       const post = {
         id: crypto.randomBytes(8).toString("hex"),
         title,
-        slug,
+        slug: enSlug,
         date: formatDate(fields.date),
-        excerpt: getBlogExcerpt(fields.content, fields.excerpt),
+        excerpt: translations.en.excerpt,
         content: fields.content,
         coverImage,
-        status: "published",
+        status: translations.en.status || "published",
+        translations,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -1090,12 +1448,7 @@ async function startServer() {
         return;
       }
 
-      const baseSlug = slugify(fields.slug || title);
-      let slug = baseSlug;
-      let count = 2;
-      while (posts.some((post) => post.id !== req.params.id && post.slug === slug)) {
-        slug = `${baseSlug}-${count++}`;
-      }
+      const { translations, enSlug } = buildBlogTranslations(fields, posts, req.params.id);
 
       const coverFile = files.find((file) => file.fieldName === "cover" && file.buffer.length > 0);
       let coverImage = posts[index].coverImage || "";
@@ -1109,10 +1462,12 @@ async function startServer() {
       posts[index] = {
         ...posts[index],
         title,
-        slug,
+        slug: enSlug,
         date: formatDate(fields.date),
-        excerpt: getBlogExcerpt(fields.content, fields.excerpt),
+        excerpt: translations.en.excerpt,
         content: fields.content,
+        status: translations.en.status || "published",
+        translations,
         coverImage,
         updatedAt: new Date().toISOString(),
       };
@@ -1122,6 +1477,53 @@ async function startServer() {
     } catch (error: any) {
       console.error("Blog update failed:", error);
       res.status(error.message === "Request is too large" ? 413 : 500).type("html").send(renderAdminLayout("Edit Blog Post", "blog", `<div class="empty">${escapeHtml(error.message || "Failed to save post")}</div>`));
+    }
+  });
+
+  app.post("/admin/blog/:id/translate", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+
+    const posts = readBlogPosts();
+    const index = posts.findIndex((item) => item.id === req.params.id);
+    if (index < 0) {
+      res.status(404).type("html").send(renderAdminLayout("Post Not Found", "blog", '<div class="empty">Post not found.</div>'));
+      return;
+    }
+
+    try {
+      const drafts = await generateBlogTranslationDrafts(posts[index]);
+      const en = getAdminBlogTranslation(posts[index], "en");
+      const existingTranslations = posts[index].translations || {};
+      posts[index] = {
+        ...posts[index],
+        translations: {
+          ...existingTranslations,
+          en,
+          ja: {
+            title: drafts.ja?.title || "",
+            slug: existingTranslations.ja?.slug || en.slug || posts[index].slug,
+            excerpt: drafts.ja?.excerpt || "",
+            content: drafts.ja?.content || "",
+            status: "draft",
+          },
+          zh: {
+            title: drafts.zh?.title || "",
+            slug: existingTranslations.zh?.slug || en.slug || posts[index].slug,
+            excerpt: drafts.zh?.excerpt || "",
+            content: drafts.zh?.content || "",
+            status: "draft",
+          },
+        },
+        updatedAt: new Date().toISOString(),
+      };
+      writeBlogPosts(posts);
+      res.redirect(`/admin/blog/${req.params.id}/edit`);
+    } catch (error: any) {
+      const post = { ...posts[index], formError: error.message || "Failed to generate translation drafts." };
+      res
+        .status(500)
+        .type("html")
+        .send(renderAdminLayout("Edit Blog Post", "blog", renderBlogForm(post, `/admin/blog/${post.id}/edit`)));
     }
   });
 
@@ -1232,12 +1634,30 @@ async function startServer() {
     console.log(`Serving static files from ${distPath}`);
 
     app.get("/blog", (req, res) => {
-      const rendered = renderDynamicBlogIndex(distPath);
+      const rendered = renderDynamicBlogIndex(distPath, "en");
+      res.status(rendered.status).type("html").send(rendered.html);
+    });
+
+    app.get("/:locale/blog", (req, res, next) => {
+      if (!locales.includes(req.params.locale as Locale)) {
+        next();
+        return;
+      }
+      const rendered = renderDynamicBlogIndex(distPath, normalizeLocale(req.params.locale));
       res.status(rendered.status).type("html").send(rendered.html);
     });
 
     app.get("/blog/:slug", (req, res) => {
-      const rendered = renderDynamicBlogPost(distPath, req.params.slug);
+      const rendered = renderDynamicBlogPost(distPath, req.params.slug, "en");
+      res.status(rendered.status).type("html").send(rendered.html);
+    });
+
+    app.get("/:locale/blog/:slug", (req, res, next) => {
+      if (!locales.includes(req.params.locale as Locale)) {
+        next();
+        return;
+      }
+      const rendered = renderDynamicBlogPost(distPath, req.params.slug, normalizeLocale(req.params.locale));
       res.status(rendered.status).type("html").send(rendered.html);
     });
 

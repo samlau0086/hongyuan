@@ -67,3 +67,45 @@ The Contact form submits RFQ data and drawing files to the app backend.
 - Stored blog posts on VPS: `$VPS_DEPLOY_PATH/shared/blog`
 
 Uploaded RFQ files are downloadable from the admin page after login. Blog posts are edited with Markdown and can include an uploaded cover image.
+
+## Blog AI Translation Provider
+
+The admin blog editor can generate Japanese and Chinese draft translations from the English source article. Generated translations are saved as drafts and must be reviewed before publishing.
+
+### OpenAI Responses API
+
+```bash
+AI_TRANSLATION_PROVIDER="openai-responses"
+AI_TRANSLATION_API_KEY="your-openai-api-key"
+AI_TRANSLATION_MODEL="gpt-4.1-mini"
+```
+
+### OpenAI-compatible providers
+
+Use this mode for providers or gateways that expose an OpenAI-compatible `/chat/completions` API, such as DeepSeek, SiliconFlow, Qwen-compatible gateways, or a self-hosted LLM gateway.
+
+```bash
+AI_TRANSLATION_PROVIDER="openai-compatible"
+AI_TRANSLATION_API_KEY="your-provider-api-key"
+AI_TRANSLATION_MODEL="your-model-name"
+AI_TRANSLATION_BASE_URL="https://your-provider.example.com/v1"
+```
+
+If your provider does not support `response_format`, disable it:
+
+```bash
+AI_TRANSLATION_RESPONSE_FORMAT="false"
+```
+
+You can also set a full endpoint directly:
+
+```bash
+AI_TRANSLATION_ENDPOINT="https://your-provider.example.com/v1/chat/completions"
+```
+
+Legacy OpenAI variables are still supported for compatibility:
+
+```bash
+OPENAI_API_KEY="your-openai-api-key"
+OPENAI_TRANSLATION_MODEL="gpt-4.1-mini"
+```

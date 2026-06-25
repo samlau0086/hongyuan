@@ -13,6 +13,17 @@ type StoredPost = {
   coverImage?: string;
   content?: string;
   status?: string;
+  translations?: Partial<Record<Locale, BlogTranslation>>;
+};
+
+type Locale = 'en' | 'ja' | 'zh';
+
+type BlogTranslation = {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  status?: string;
 };
 
 type BlogSummary = {
@@ -40,7 +51,14 @@ const templatePath = path.join(distDir, 'index.html');
 const blogDataDir = process.env.BLOG_DATA_DIR || path.join(rootDir, 'data', 'blog');
 const blogPostsPath = path.join(blogDataDir, 'posts.json');
 
-const staticRoutes = ['/', '/about', '/capabilities', '/quality', '/contact', '/blog'];
+const locales: Locale[] = ['en', 'ja', 'zh'];
+const bareStaticRoutes = ['/', '/about', '/capabilities', '/quality', '/contact', '/blog'];
+const legacyEnglishRoutes = ['/', '/about', '/capabilities', '/quality', '/contact', '/blog'];
+
+function localizedPath(route: string, locale: Locale) {
+  const normalized = route === '/' ? '' : route;
+  return locale === 'en' ? `/en${normalized}` : `/${locale}${normalized}`;
+}
 
 function escapeHtml(value: unknown) {
   return String(value ?? '')
@@ -125,28 +143,45 @@ function readBlogPosts(): StoredPost[] {
   }
 }
 
-function getPublishedPosts() {
+function getTranslation(post: StoredPost, locale: Locale): BlogTranslation | null {
+  const translation = post.translations?.[locale];
+  if (translation?.title && translation?.slug && translation.status !== 'draft') return translation;
+  if (locale === 'en' && post.title && post.slug && post.status !== 'draft') {
+    return {
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      content: post.content,
+      status: post.status || 'published',
+    };
+  }
+  return null;
+}
+
+function getPublishedPosts(locale: Locale) {
   return readBlogPosts()
-    .filter((post) => post.status !== 'draft' && post.title && post.slug)
+    .filter((post) => getTranslation(post, locale))
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 }
 
-function toSummary(post: StoredPost): BlogSummary {
+function toSummary(post: StoredPost, locale: Locale): BlogSummary {
+  const translation = getTranslation(post, locale);
   return {
     id: post.id,
-    title: String(post.title || ''),
-    slug: String(post.slug || ''),
+    title: String(translation?.title || ''),
+    slug: String(translation?.slug || ''),
     date: String(post.date || new Date().toISOString()),
-    excerpt: post.excerpt,
+    excerpt: translation?.excerpt,
     img: post.coverImage || '',
   };
 }
 
-function toPostData(post: StoredPost): BlogPostData {
+function toPostData(post: StoredPost, locale: Locale): BlogPostData {
+  const translation = getTranslation(post, locale);
   return {
-    ...toSummary(post),
-    content: post.content || '',
-    contentHtml: markdownToHtml(post.content || ''),
+    ...toSummary(post, locale),
+    content: translation?.content || '',
+    contentHtml: markdownToHtml(translation?.content || ''),
   };
 }
 
@@ -211,10 +246,6 @@ if (!fs.existsSync(templatePath)) {
 }
 
 const template = fs.readFileSync(templatePath, 'utf8');
-const publishedPosts = getPublishedPosts();
-const summaries = publishedPosts.map(toSummary);
-const baseBlogData: BlogInitialData = { posts: summaries };
-
 const vite = await createServer({
   appType: 'custom',
   logLevel: 'error',
@@ -224,23 +255,50 @@ const vite = await createServer({
 try {
   const { AppProviders, AppRoutes, PrerenderMemoryRouter } = await vite.ssrLoadModule('/src/App.tsx');
 
-  for (const route of staticRoutes) {
-    writeRoute(route, renderRoute(template, route, baseBlogData, AppProviders, AppRoutes, PrerenderMemoryRouter));
+  for (const route of legacyEnglishRoutes) {
+    const englishPosts = getPublishedPosts('en');
+    const summaries = englishPosts.map((post) => toSummary(post, 'en'));
+    writeRoute(route, renderRoute(template, route, { posts: summaries }, AppProviders, AppRoutes, PrerenderMemoryRouter));
   }
 
-  for (const post of publishedPosts) {
-    const route = `/blog/${post.slug}`;
-    writeRoute(
-      route,
-      renderRoute(
-        template,
+  for (const locale of locales) {
+    const publishedPosts = getPublishedPosts(locale);
+    const summaries = publishedPosts.map((post) => toSummary(post, locale));
+
+    for (const bareRoute of bareStaticRoutes) {
+      const route = localizedPath(bareRoute, locale);
+      writeRoute(route, renderRoute(template, route, { posts: summaries }, AppProviders, AppRoutes, PrerenderMemoryRouter));
+    }
+
+    for (const post of publishedPosts) {
+      const translation = getTranslation(post, locale);
+      if (!translation?.slug) continue;
+      const route = localizedPath(`/blog/${translation.slug}`, locale);
+      writeRoute(
         route,
-        { posts: summaries, post: toPostData(post) },
-        AppProviders,
-        AppRoutes,
-        PrerenderMemoryRouter,
-      ),
-    );
+        renderRoute(
+          template,
+          route,
+          { posts: summaries, post: toPostData(post, locale) },
+          AppProviders,
+          AppRoutes,
+          PrerenderMemoryRouter,
+        ),
+      );
+      if (locale === 'en') {
+        writeRoute(
+          `/blog/${translation.slug}`,
+          renderRoute(
+            template,
+            `/blog/${translation.slug}`,
+            { posts: summaries, post: toPostData(post, locale) },
+            AppProviders,
+            AppRoutes,
+            PrerenderMemoryRouter,
+          ),
+        );
+      }
+    }
   }
 } finally {
   await vite.close();

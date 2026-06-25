@@ -3,9 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useBlogInitialData } from '../blogInitialData';
+import { useLocale, useSiteCopy } from '../i18n';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
+  const { locale, localizedPath } = useLocale();
+  const copy = useSiteCopy();
   const initialBlogData = useBlogInitialData();
   const initialPost = initialBlogData.post?.slug === slug ? initialBlogData.post : null;
   const [post, setPost] = useState<any>(initialPost);
@@ -16,15 +19,15 @@ export default function BlogPost() {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/blog/posts/${slug}`);
+        const response = await fetch(`/api/blog/posts/${slug}?lang=${locale}`);
         if (!response.ok) {
-          throw new Error('Post not found');
+          throw new Error(copy.blog.notFound);
         }
 
         const data = await response.json();
         setPost(data);
       } catch (err: any) {
-        setError(err.message || 'Failed to load the article.');
+        setError(err.message || copy.blog.notFoundBody);
       } finally {
         setLoading(false);
       }
@@ -33,7 +36,7 @@ export default function BlogPost() {
     if (slug) {
       fetchPost();
     }
-  }, [slug]);
+  }, [slug, locale, copy.blog.notFound, copy.blog.notFoundBody]);
 
   if (loading) {
     return (
@@ -54,27 +57,27 @@ export default function BlogPost() {
   if (error || !post) {
     return (
       <div className="pt-24 pb-16 min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-3xl font-bold text-slate-900 mb-4">Post Not Found</h1>
-        <p className="text-slate-600 mb-8">{error || "The article you're looking for doesn't exist or has been removed."}</p>
-        <Link to="/blog" className="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">
-          <ArrowLeft className="w-4 h-4" /> Back to Blog
+        <h1 className="text-3xl font-bold text-slate-900 mb-4">{copy.blog.notFound}</h1>
+        <p className="text-slate-600 mb-8">{error || copy.blog.notFoundBody}</p>
+        <Link to={localizedPath('/blog')} className="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">
+          <ArrowLeft className="w-4 h-4" /> {copy.blog.back}
         </Link>
       </div>
     );
   }
 
-  const dateStr = new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const dateStr = new Date(post.date).toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'ja' ? 'ja-JP' : 'zh-CN', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="pt-24 pb-24 bg-white">
       <SEO
         title={`${post.title} - Hongyuan Precision`}
-        description={post.excerpt || 'Read about precision manufacturing, CNC machining and insights.'}
+        description={post.excerpt || copy.blog.fallbackDescription}
       />
 
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/blog" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Blog
+        <Link to={localizedPath('/blog')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 mb-8 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> {copy.blog.back}
         </Link>
 
         {post.img && (
